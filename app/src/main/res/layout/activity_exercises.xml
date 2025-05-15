@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/child_friendly_background"
+    tools:context=".ExercisesActivity">
+
+    <!-- Header -->
+    <TextView
+        android:id="@+id/headerTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/title_background"
+        android:paddingStart="30dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="30dp"
+        android:paddingBottom="10dp"
+        android:text="Let's Exercise"
+        android:textColor="#FFFFFF"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:fontFamily="casual" />
+
+    <!-- Exercises Container -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/headerTitle"
+        android:layout_above="@id/bottom_navigation"
+        android:layout_marginTop="20dp"
+        android:clipToPadding="false"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:clipToPadding="false">
+
+            <!-- Jump Exercise Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/jumpExerciseCard"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/child_card_background">
+
+                    <!-- Exercise Image -->
+                    <ImageView
+                        android:id="@+id/jumpExerciseImage"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="16dp"
+                        android:background="@drawable/exercise_image_background"
+                        android:contentDescription="@string/jump_exercise_image"
+                        android:padding="16dp"
+                        android:src="@drawable/child_jump_icon" />
+
+                    <!-- Exercise Details -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_toEndOf="@id/jumpExerciseImage"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Jump Exercise"
+                                android:textColor="#FFFFFF"
+                                android:textSize="26sp"
+                                android:textStyle="bold"
+                                android:fontFamily="casual" />
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginStart="8dp"
+                                android:src="@drawable/star_badge"/>
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/jump_exercise_description"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp"
+                            android:fontFamily="casual" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:drawablePadding="8dp"
+                            android:fontFamily="casual"
+                            android:gravity="center_vertical"
+                            android:text="Tap to Start"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            app:drawableStartCompat="@drawable/ic_play_small" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- More exercise cards will go here in the future -->
+            
+        </LinearLayout>
+    </ScrollView>
+    
+    <!-- Bottom Navigation -->
+    <include
+        android:id="@+id/bottom_navigation"
+        layout="@layout/bottom_navigation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true" />
+
+</RelativeLayout> 

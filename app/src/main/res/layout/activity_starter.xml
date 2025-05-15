@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black"
+    tools:context=".StarterActivity">
+
+    <ImageView
+        android:id="@+id/backgroundImage"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@string/app_splash_background"
+        android:scaleType="centerCrop"
+        android:src="@drawable/mainpage" />
+
+    <ImageButton
+        android:id="@+id/playButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="137dp"
+        android:layout_marginEnd="130dp"
+        android:layout_marginBottom="270dp"
+        android:background="@drawable/play_button_ripple"
+        android:contentDescription="@string/play"
+        android:padding="24dp"
+        android:src="@drawable/play_icon" />
+
+</RelativeLayout>

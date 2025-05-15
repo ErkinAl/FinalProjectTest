@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Child-friendly text style for bottom navigation -->
+    <style name="BottomNavigationChildStyle" parent="TextAppearance.AppCompat.Caption">
+        <item name="android:textSize">14sp</item>
+        <item name="fontFamily">casual</item>
+        <item name="android:fontFamily">casual</item>
+    </style>
+</resources> 

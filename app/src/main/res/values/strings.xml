@@ -1,3 +1,24 @@
 <resources>
-    <string name="app_name">Final</string>
+    <string name="app_name">JumpFun</string>
+    <string name="play">PLAY</string>
+    <string name="app_splash_background">Application splash background</string>
+    
+    <!-- Exercises Screen -->
+    <string name="choose_exercise">Let\'s Play!</string>
+    <string name="jump_exercise">Jumping Fun</string>
+    <string name="jump_exercise_description">Jump as high as you can! Can you reach the stars?</string>
+    <string name="tap_to_start">Tap to start the fun!</string>
+    <string name="jump_exercise_image">Jump exercise image</string>
+    
+    <!-- Navigation -->
+    <string name="nav_exercises">Exercises</string>
+    <string name="nav_stats">Stats</string>
+    
+    <!-- Stats Screen -->
+    <string name="your_stats">Your Achievements</string>
+    <string name="xp_earned">Stars Collected</string>
+    <string name="jump_count">Total Jumps</string>
+    <string name="exercises_completed">Games Won</string>
+    <string name="level">Super Hero Level</string>
+    <string name="next_level">Reach Next Level</string>
 </resources>

@@ -2,6 +2,8 @@ package com.example.afinal;
 import android.graphics.Bitmap.Config;
 
 import android.Manifest;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,6 +14,7 @@ import android.graphics.YuvImage;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.Size;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -56,6 +59,12 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private ExecutorService executor = Executors.newSingleThreadExecutor();
     private JumpCounter jumpCounter;
     
+    // Stats tracking
+    private SharedPreferences userStats;
+    private boolean exerciseCompleted = false;
+    private static final int JUMPS_TO_COMPLETE = 20;
+    private static final int XP_REWARD = 50;
+    
     // Constants for optimized processing
     private static final int MODEL_INPUT_SIZE = 320; // Smaller model input size for faster processing
 
@@ -65,6 +74,9 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         try {
             setContentView(R.layout.activity_main);
 
+            // Initialize SharedPreferences for stats
+            userStats = getSharedPreferences("user_stats", MODE_PRIVATE);
+            
             previewView = findViewById(R.id.previewView);
             poseOverlay = findViewById(R.id.poseOverlay);
             jumpCountText = findViewById(R.id.jumpCountText);
@@ -77,15 +89,30 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             jumpCounter = new JumpCounter(this);
             jumpCountText.setText("Jumps: 0");
 
-            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
-                if (isGranted) {
-                    initModel();
-                    startCamera();
-                } else {
-                    Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-            }).launch(Manifest.permission.CAMERA);
+            // Set immersive sticky mode for better fullscreen experience
+            getWindow().getDecorView().setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE |
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
+                View.SYSTEM_UI_FLAG_FULLSCREEN);
+
+            // We're coming from the starter activity, so we should already have permissions
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                initModel();
+                startCamera();
+            } else {
+                registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                    if (isGranted) {
+                        initModel();
+                        startCamera();
+                    } else {
+                        Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                }).launch(Manifest.permission.CAMERA);
+            }
         } catch (Exception e) {
             Log.e("PoseTracker", "onCreate failed: " + e.getMessage(), e);
             Toast.makeText(this, "Initialization failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -97,6 +124,55 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     @Override
     public void onJumpDetected(int jumpCount) {
         jumpCountText.setText("Jumps: " + jumpCount);
+        
+        // Track jumps in stats
+        updateJumpStats(jumpCount);
+        
+        // Check if exercise is completed
+        if (!exerciseCompleted && jumpCount >= JUMPS_TO_COMPLETE) {
+            exerciseCompleted = true;
+            completeExercise();
+        }
+    }
+    
+    private void updateJumpStats(int currentJumps) {
+        // Update total jump count
+        int totalJumps = userStats.getInt("jump_count", 0);
+        
+        // Only add the new jumps
+        int prevJumps = userStats.getInt("current_exercise_jumps", 0);
+        int newJumps = currentJumps - prevJumps;
+        
+        if (newJumps > 0) {
+            totalJumps += newJumps;
+            userStats.edit()
+                .putInt("jump_count", totalJumps)
+                .putInt("current_exercise_jumps", currentJumps)
+                .apply();
+        }
+    }
+    
+    private void completeExercise() {
+        // Award XP for completing the exercise
+        int currentXp = userStats.getInt("xp", 0);
+        int exercisesCompleted = userStats.getInt("exercises_completed", 0);
+        
+        userStats.edit()
+            .putInt("xp", currentXp + XP_REWARD)
+            .putInt("exercises_completed", exercisesCompleted + 1)
+            .apply();
+        
+        // Show congratulations toast
+        Toast.makeText(this, "Exercise completed! +50 XP", Toast.LENGTH_LONG).show();
+    }
+    
+    @Override
+    public void onBackPressed() {
+        // Return to exercises activity
+        Intent intent = new Intent(this, ExercisesActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        finish();
     }
 
     private void initModel() {

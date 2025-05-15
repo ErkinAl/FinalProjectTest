@@ -6,4 +6,10 @@
     </style>
 
     <style name="Theme.Final" parent="Base.Theme.Final" />
+    
+    <style name="Theme.Final.Fullscreen" parent="Theme.Final">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>

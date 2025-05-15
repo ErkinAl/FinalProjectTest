@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Outer glow -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="60dp"
+                android:startColor="#88FF0000"
+                android:endColor="#00000000" />
+            <size android:width="130dp" android:height="130dp" />
+        </shape>
+    </item>
+    
+    <!-- Button background -->
+    <item android:left="5dp" android:top="5dp" android:right="5dp" android:bottom="5dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="120dp"
+                android:startColor="#FF2D55"
+                android:centerColor="#FF1E45"
+                android:endColor="#FF0000" />
+            <stroke
+                android:width="2dp"
+                android:color="#FFFFFF" />
+        </shape>
+    </item>
+</layer-list> 
