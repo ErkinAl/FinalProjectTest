@@ -101,109 +101,32 @@ public class StatsActivity extends AppCompatActivity {
     private void loadStats() {
         SharedPreferences prefs = getSharedPreferences("user_stats", MODE_PRIVATE);
         
+        // Reset all stats to 0 for new users (temporary - remove this when backend is ready)
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.putInt("xp", 0);
+        editor.putInt("jump_count", 0);
+        editor.putInt("exercises_completed", 0);
+        editor.apply();
+        
         // Get saved stats, defaulting to 0 if not found
         int xp = prefs.getInt("xp", 0);
         int jumpCount = prefs.getInt("jump_count", 0);
         int exercisesCompleted = prefs.getInt("exercises_completed", 0);
         
-        // Calculate level (1 level per 100 XP)
-        int level = (xp / 100) + 1;
-        int xpToNextLevel = 100 - (xp % 100);
-        int progressToNextLevel = xp % 100;
+        // Calculate level (starting at level 0, level up every 100 XP)
+        int level = xp / 100;  // Level 0 at 0-99 XP, Level 1 at 100-199 XP, etc.
+        int progressToNextLevel = xp % 100;  // XP progress within current level
         
-        // Update UI with fun animations
-        animateTextChange(tvXpValue, xp);
-        animateTextChange(tvJumpCountValue, jumpCount);
-        animateTextChange(tvExercisesCompletedValue, exercisesCompleted);
-        animateTextChange(tvLevelValue, level);
+        // Set values directly to ensure they show up
+        tvXpValue.setText(String.valueOf(xp));
+        tvJumpCountValue.setText(String.valueOf(jumpCount));
+        tvExercisesCompletedValue.setText(String.valueOf(exercisesCompleted));
+        tvLevelValue.setText(String.valueOf(level));
         
-        // Animate progress bar
-        pbNextLevel.setProgress(0);
-        pbNextLevel.animate()
-            .setDuration(1000)
-            .setStartDelay(500)
-            .withEndAction(() -> {
-                pbNextLevel.setProgress(progressToNextLevel);
-                tvNextLevelProgress.setText(progressToNextLevel + "/100");
-            });
+        // Set progress bar and text
+        pbNextLevel.setProgress(progressToNextLevel);
+        tvNextLevelProgress.setText(progressToNextLevel + "/100");
     }
     
-    // Helper method to animate number changes
-    private void animateTextChange(final TextView textView, final int newValue) {
-        try {
-            // Get current value
-            int currentValue = Integer.parseInt(textView.getText().toString());
-            
-            // Don't animate if values are the same
-            if (currentValue == newValue) {
-                return;
-            }
-            
-            // Determine if counting up or down
-            final boolean countUp = newValue > currentValue;
-            
-            // Determine increment based on difference
-            final int increment = Math.max(1, Math.abs(newValue - currentValue) / 20);
-            
-            // Start animation
-            textView.animate().cancel();
-            textView.setScaleX(1.0f);
-            textView.setScaleY(1.0f);
-            
-            Runnable updateTextRunnable = new Runnable() {
-                int currentCount = currentValue;
-                
-                @Override
-                public void run() {
-                    if ((countUp && currentCount < newValue) || (!countUp && currentCount > newValue)) {
-                        // Update the counter value
-                        currentCount = countUp ? Math.min(newValue, currentCount + increment) : 
-                                                Math.max(newValue, currentCount - increment);
-                        textView.setText(String.valueOf(currentCount));
-                        
-                        // Add a small scale animation with each change
-                        textView.animate()
-                            .scaleX(1.1f)
-                            .scaleY(1.1f)
-                            .setDuration(50)
-                            .withEndAction(() -> 
-                                textView.animate()
-                                    .scaleX(1.0f)
-                                    .scaleY(1.0f)
-                                    .setDuration(50)
-                                    .start()
-                            )
-                            .start();
-                        
-                        // Continue updating
-                        textView.postDelayed(this, 50);
-                    } else {
-                        // Ensure final value is correct
-                        textView.setText(String.valueOf(newValue));
-                        
-                        // Final celebration animation
-                        textView.animate()
-                            .scaleX(1.3f)
-                            .scaleY(1.3f)
-                            .setDuration(200)
-                            .withEndAction(() -> 
-                                textView.animate()
-                                    .scaleX(1.0f)
-                                    .scaleY(1.0f)
-                                    .setDuration(200)
-                                    .start()
-                            )
-                            .start();
-                    }
-                }
-            };
-            
-            // Start the update process
-            textView.post(updateTextRunnable);
-            
-        } catch (NumberFormatException e) {
-            // Handle case where text isn't a number
-            textView.setText(String.valueOf(newValue));
-        }
-    }
+
 } 

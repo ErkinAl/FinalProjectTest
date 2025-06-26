@@ -60,10 +60,14 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
 
     private TextView countdownText;
     private TextView cooldownTimer;
-    private TextView jumpReadyText;
     private View countdownOverlay;
     private View leftIndicator;
     private View rightIndicator;
+    
+    // Congratulations screen elements
+    private View congratsOverlay;
+    private TextView congratsText;
+    private TextView xpEarnedText;
     
     private OrtEnvironment env;
     private OrtSession session;
@@ -92,7 +96,8 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private SharedPreferences userStats;
     private boolean exerciseCompleted = false;
     private static final int JUMPS_TO_COMPLETE = 20;
-    private static final int XP_REWARD = 50;
+    private static final int XP_REWARD = 20;
+    private int remainingJumps = 20; // Countdown from 20 to 0
     
     // Constants for optimized processing
     private static final int MODEL_INPUT_SIZE = 320;
@@ -124,10 +129,14 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
 
             countdownText = findViewById(R.id.countdownText);
             cooldownTimer = findViewById(R.id.cooldownTimer);
-            jumpReadyText = findViewById(R.id.jumpReadyText);
             countdownOverlay = findViewById(R.id.countdownOverlay);
             leftIndicator = findViewById(R.id.leftIndicator);
             rightIndicator = findViewById(R.id.rightIndicator);
+            
+            // Initialize congratulations elements
+            congratsOverlay = findViewById(R.id.congratsOverlay);
+            congratsText = findViewById(R.id.congratsText);
+            xpEarnedText = findViewById(R.id.xpEarnedText);
 
             if (previewView == null || poseOverlay == null || jumpCountText == null) {
                 throw new IllegalStateException("Failed to find required views");
@@ -135,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             
             // Initialize jump counter with this as the listener
             jumpCounter = new JumpCounter(this);
-            jumpCountText.setText("Jumps: 0");
+            jumpCountText.setText("Jumps: " + remainingJumps);
             
 
 
@@ -221,14 +230,16 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         countdownOverlay.setVisibility(View.GONE);
         countdownText.setVisibility(View.GONE);
         
-        // Show ready indicator
-        showJumpReady();
+        // Initialize visual indicators (no ready text needed)
         
         // Enable jump detection immediately - no need to wait for movement
         if (jumpCounter != null) {
             jumpCounter.setJumpDetectionEnabled(true);
             // Reset the jump counter to start fresh
             jumpCounter.reset();
+            // Reset remaining jumps for countdown
+            remainingJumps = JUMPS_TO_COMPLETE;
+            jumpCountText.setText("Jumps: " + remainingJumps);
         }
         
 
@@ -245,18 +256,60 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             leftIndicator.setBackgroundColor(0xFF00FF00); // Green
             rightIndicator.setBackgroundColor(0xFF00FF00); // Green
             
-            // Show ready text
-            if (jumpReadyText != null) {
-                jumpReadyText.setVisibility(View.VISIBLE);
-                jumpReadyText.setText("🚀 READY TO JUMP! 🚀");
-                jumpReadyText.setBackgroundColor(0xCC00FF00); // Green background
-            }
-            
             // Hide cooldown timer
             if (cooldownTimer != null) {
                 cooldownTimer.setVisibility(View.GONE);
             }
         }
+    }
+    
+    private void playJumpAnimation() {
+        // Cool screen shake animation for successful jump
+        runOnUiThread(() -> {
+            if (poseOverlay != null && jumpCountText != null) {
+                // Screen shake effect
+                poseOverlay.animate()
+                    .translationX(10f)
+                    .setDuration(50)
+                    .withEndAction(() -> {
+                        poseOverlay.animate()
+                            .translationX(-10f)
+                            .setDuration(50)
+                            .withEndAction(() -> {
+                                poseOverlay.animate()
+                                    .translationX(5f)
+                                    .setDuration(50)
+                                    .withEndAction(() -> {
+                                        poseOverlay.animate()
+                                            .translationX(0f)
+                                            .setDuration(50);
+                                    });
+                            });
+                    });
+                
+                // Jump counter bounce effect
+                jumpCountText.animate()
+                    .scaleX(1.3f)
+                    .scaleY(1.3f)
+                    .setDuration(100)
+                    .withEndAction(() -> {
+                        jumpCountText.animate()
+                            .scaleX(1.0f)
+                            .scaleY(1.0f)
+                            .setDuration(100);
+                    });
+                
+                // Brief green flash on side indicators
+                leftIndicator.setBackgroundColor(0xFFFFFF00); // Bright yellow flash
+                rightIndicator.setBackgroundColor(0xFFFFFF00);
+                mainHandler.postDelayed(() -> {
+                    if (!isInCooldown) {
+                        leftIndicator.setBackgroundColor(0xFF00FF00); // Back to green
+                        rightIndicator.setBackgroundColor(0xFF00FF00);
+                    }
+                }, 150);
+            }
+        });
     }
     
     private void showCooldown() {
@@ -270,11 +323,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             leftIndicator.setBackgroundColor(0xFFFF0000); // Red
             rightIndicator.setBackgroundColor(0xFFFF0000); // Red
             
-            // Hide ready text
-            if (jumpReadyText != null) {
-                jumpReadyText.setVisibility(View.GONE);
-            }
-            
+        
             // Show cooldown timer
             if (cooldownTimer != null) {
                 cooldownTimer.setVisibility(View.VISIBLE);
@@ -327,19 +376,22 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     @Override
     public void onJumpDetected(int jumpCount) {
         runOnUiThread(() -> {
-            jumpCountText.setText("Jumps: " + jumpCount);
+            // Countdown from 20 to 0
+            remainingJumps = JUMPS_TO_COMPLETE - jumpCount;
+            jumpCountText.setText("Jumps: " + remainingJumps);
+            
+            // Play cool jump animation
+            playJumpAnimation();
             
             // Start cooldown immediately after jump
             showCooldown();
-            
-
         });
         
         // Track jumps in stats
         updateJumpStats(jumpCount);
         
-        // Check if exercise is completed
-        if (!exerciseCompleted && jumpCount >= JUMPS_TO_COMPLETE) {
+        // Check if exercise is completed (when countdown reaches 0)
+        if (!exerciseCompleted && remainingJumps <= 0) {
             exerciseCompleted = true;
             completeExercise();
         }
@@ -372,13 +424,80 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             .putInt("exercises_completed", exercisesCompleted + 1)
             .apply();
         
-        // Show congratulations toast
+        // Show congratulations screen overlay
+        showCongratulationsScreen();
+    }
+    
+    private void showCongratulationsScreen() {
         runOnUiThread(() -> {
-            Toast.makeText(this, "Exercise completed! +50 XP", Toast.LENGTH_LONG).show();
-            //if (feedbackText != null) {
-           //     feedbackText.setText("🎉 Exercise Complete! +50 XP");
-           // }
+            // Show congratulations overlay and text
+            congratsOverlay.setVisibility(View.VISIBLE);
+            congratsText.setVisibility(View.VISIBLE);
+            xpEarnedText.setVisibility(View.VISIBLE);
+            
+            // Update XP text with actual earned amount
+            xpEarnedText.setText("+" + XP_REWARD + " XP EARNED!");
+            
+            // Make XP text tappable to proceed
+            xpEarnedText.setOnClickListener(v -> {
+                // User tapped XP text - proceed to main screen immediately
+                proceedToMainScreen();
+            });
+            
+            // Animate the congratulations text
+            congratsText.setAlpha(0f);
+            xpEarnedText.setAlpha(0f);
+            
+            congratsText.animate()
+                .alpha(1f)
+                .scaleX(1.1f)
+                .scaleY(1.1f)
+                .setDuration(800)
+                .withEndAction(() -> {
+                    congratsText.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(200);
+                });
+            
+            xpEarnedText.animate()
+                .alpha(1f)
+                .scaleX(1.2f)
+                .scaleY(1.2f)
+                .setDuration(600)
+                .setStartDelay(400)
+                .withEndAction(() -> {
+                    xpEarnedText.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(300)
+                        .withEndAction(() -> {
+                            // Add subtle hint that it's tappable after animation completes
+                            xpEarnedText.animate()
+                                .scaleX(1.05f)
+                                .scaleY(1.05f)
+                                .setDuration(500)
+                                .withEndAction(() -> {
+                                    xpEarnedText.animate()
+                                        .scaleX(1.0f)
+                                        .scaleY(1.0f)
+                                        .setDuration(500);
+                                });
+                        });
+                });
+            
+            // Auto return to main screen if user doesn't tap (fallback)
+            mainHandler.postDelayed(() -> {
+                proceedToMainScreen();
+            }, 5000); // 5 second fallback delay
         });
+    }
+    
+    private void proceedToMainScreen() {
+        Intent intent = new Intent(this, ExercisesActivity.class);
+        startActivity(intent);
+        overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        finish();
     }
     
     @Override
@@ -838,10 +957,14 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
 
         countdownText = null;
         cooldownTimer = null;
-        jumpReadyText = null;
         countdownOverlay = null;
         leftIndicator = null;
         rightIndicator = null;
+        
+        // Clear congratulations elements
+        congratsOverlay = null;
+        congratsText = null;
+        xpEarnedText = null;
     }
     
     @Override

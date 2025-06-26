@@ -72,24 +72,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Cooldown timer (top of screen) -->
-    <TextView
-        android:id="@+id/cooldownTimer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:background="#CCFF0000"
-        android:padding="12dp"
-        android:text="Cooldown: 0.1s"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Jump count display -->
+    <!-- Jump count display (top of screen) -->
     <TextView
         android:id="@+id/jumpCountText"
         android:layout_width="wrap_content"
@@ -103,27 +86,76 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="80dp" />
+        app:layout_constraintVertical_bias="0.05" />
 
-    <!-- Ready to jump indicator -->
+    <!-- Cooldown timer (below jump counter) -->
     <TextView
-        android:id="@+id/jumpReadyText"
-        android:layout_width="0dp"
+        android:id="@+id/cooldownTimer"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="32dp"
-        android:background="#CC00FF00"
-        android:gravity="center"
-        android:padding="16dp"
-        android:text="🚀 READY TO JUMP! 🚀"
-        android:textColor="@android:color/black"
-        android:textSize="20sp"
+        android:layout_marginTop="16dp"
+        android:background="#CCFF0000"
+        android:padding="12dp"
+        android:text="Cooldown: 0.1s"
+        android:textColor="@android:color/white"
+        android:textSize="18sp"
         android:textStyle="bold"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/jumpCountText" />
+
+    <!-- Congratulations overlay (full screen) -->
+    <View
+        android:id="@+id/congratsOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#DD000000"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Congratulations text -->
+    <TextView
+        android:id="@+id/congratsText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:gravity="center"
+        android:text="🎉 EXERCISE COMPLETED! 🎉"
+        android:textColor="@android:color/white"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@+id/xpEarnedText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <!-- XP earned text -->
+    <TextView
+        android:id="@+id/xpEarnedText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginTop="24dp"
+        android:background="#CC00FF00"
+        android:gravity="center"
+        android:padding="20dp"
+        android:text="+20 XP EARNED!"
+        android:textColor="@android:color/black"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/congratsText" />
 
 
 

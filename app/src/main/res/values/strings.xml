@@ -15,10 +15,15 @@
     <string name="nav_stats">Stats</string>
     
     <!-- Stats Screen -->
-    <string name="your_stats">Your Achievements</string>
-    <string name="xp_earned">Stars Collected</string>
-    <string name="jump_count">Total Jumps</string>
-    <string name="exercises_completed">Games Won</string>
-    <string name="level">Super Hero Level</string>
-    <string name="next_level">Reach Next Level</string>
+    <string name="your_stats">Your Progress</string>
+    <string name="xp_earned">Experience Points</string>
+    <string name="total_jumps">Total Jumps</string>
+    <string name="exercises_completed">Exercises Completed</string>
+    <string name="level">Level</string>
+    <string name="next_level">Progress to Next Level</string>
+    
+    <!-- Exercise Stats -->
+    <string name="jump_counter_stats">Jump Counter</string>
+    <string name="coming_soon">Coming Soon!</string>
+    <string name="more_exercises">More Exercises</string>
 </resources>
