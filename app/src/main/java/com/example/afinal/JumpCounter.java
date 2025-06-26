@@ -12,19 +12,27 @@ public class JumpCounter {
         void onJumpDetected(int jumpCount);
     }
     
-    // Ultra-responsive constants for instant jump detection
-    private static final float MOVEMENT_THRESHOLD = 0.012f; // Even more sensitive for instant detection
-    private static final float MIN_CONFIDENCE = 0.05f; // Lower confidence for better detection
+    // Smart jump detection constants with validation
+    private static final float MOVEMENT_THRESHOLD = 0.018f; // Balanced threshold to avoid false positives
+    private static final float MIN_CONFIDENCE = 0.3f; // Higher confidence for reliable detection
     private static final long JUMP_COOLDOWN_MS = 1000; // 1 second cooldown between jumps
+    private static final float MIN_JUMP_HEIGHT = 0.025f; // Minimum movement to qualify as jump
+    private static final int VALIDATION_FRAMES = 2; // Frames to validate jump motion
     private static final String TAG = "JumpCounter";
     
-    // Frame-to-frame tracking (no smoothing, instant response)
+    // Frame-to-frame tracking with validation
     private int jumpCount = 0;
     private float[] prevShoulderY = new float[2]; // Left and right shoulders
     private float[] prevHipY = new float[2]; // Left and right hips
     private boolean isInUpwardMotion = false;
     private long lastJumpTime = 0;
     private boolean hasValidPrevFrame = false;
+    
+    // Jump validation state
+    private float[] recentMovements = new float[VALIDATION_FRAMES]; // Track recent movements
+    private int movementIndex = 0;
+    private float totalUpwardMovement = 0f;
+    private int consecutiveUpwardFrames = 0;
     
     // Enhanced detection state
     private boolean jumpDetectionEnabled = true;
@@ -118,29 +126,56 @@ public class JumpCounter {
             totalMovement = hipMovement;
         }
         
-        Log.d(TAG, String.format("Movement: Shoulders=%.4f, Hips=%.4f, Total=%.4f, UpMotion=%s", 
-                shoulderMovement, hipMovement, totalMovement, isInUpwardMotion));
+        // Update movement history for validation
+        recentMovements[movementIndex] = totalMovement;
+        movementIndex = (movementIndex + 1) % VALIDATION_FRAMES;
         
-        // INSTANT jump detection - count immediately on strong upward movement
-        if (totalMovement < -MOVEMENT_THRESHOLD && currentTime - lastJumpTime > JUMP_COOLDOWN_MS) {
-            // Strong upward movement detected - COUNT IMMEDIATELY!
-            jumpCount++;
-            lastJumpTime = currentTime;
-            isInUpwardMotion = true; // Track state for visual feedback
+        // Multi-criteria jump validation
+        boolean isStrongUpwardMovement = totalMovement < -MOVEMENT_THRESHOLD;
+        boolean hasGoodConfidence = (validShoulders > 0 || validHips > 0);
+        boolean cooldownPassed = currentTime - lastJumpTime > JUMP_COOLDOWN_MS;
+        
+        Log.d(TAG, String.format("Movement: Total=%.4f, Strong=%s, Confidence=%s, Cooldown=%s", 
+                totalMovement, isStrongUpwardMovement, hasGoodConfidence, cooldownPassed));
+        
+        if (isStrongUpwardMovement) {
+            consecutiveUpwardFrames++;
+            totalUpwardMovement += Math.abs(totalMovement);
             
-            Log.d(TAG, "🚀 INSTANT JUMP DETECTED! Count: " + jumpCount + 
-                  " (movement: " + Math.abs(totalMovement) + ")");
-            
-            // Notify listener immediately - no waiting for downward movement
-            if (listener != null) {
-                final int count = jumpCount;
-                mainHandler.post(() -> listener.onJumpDetected(count));
+            // SMART jump detection with multiple validation criteria
+            if (consecutiveUpwardFrames >= VALIDATION_FRAMES && 
+                totalUpwardMovement > MIN_JUMP_HEIGHT && 
+                hasGoodConfidence && 
+                cooldownPassed &&
+                !isInUpwardMotion) {
+                
+                // Validated jump detected!
+                jumpCount++;
+                lastJumpTime = currentTime;
+                isInUpwardMotion = true;
+                
+                Log.d(TAG, "✅ VALIDATED JUMP! Count: " + jumpCount + 
+                      " (frames: " + consecutiveUpwardFrames + ", height: " + totalUpwardMovement + ")");
+                
+                // Notify listener
+                if (listener != null) {
+                    final int count = jumpCount;
+                    mainHandler.post(() -> listener.onJumpDetected(count));
+                }
+                
+                // Reset validation state
+                resetValidationState();
             }
-        } 
-        else if (isInUpwardMotion && totalMovement > 0) {
-            // End of upward motion (for visual state tracking only)
-            isInUpwardMotion = false;
-            Log.d(TAG, "Jump motion completed");
+        } else {
+            // Not upward movement - check if we should reset validation
+            if (totalMovement > MOVEMENT_THRESHOLD * 0.5f) {
+                // Downward movement - end of jump motion
+                if (isInUpwardMotion) {
+                    isInUpwardMotion = false;
+                    Log.d(TAG, "Jump motion completed");
+                }
+                resetValidationState();
+            }
         }
         
         // Update previous frame data
@@ -151,12 +186,24 @@ public class JumpCounter {
     }
     
     /**
+     * Reset validation state for clean detection
+     */
+    private void resetValidationState() {
+        consecutiveUpwardFrames = 0;
+        totalUpwardMovement = 0f;
+        for (int i = 0; i < VALIDATION_FRAMES; i++) {
+            recentMovements[i] = 0f;
+        }
+    }
+
+    /**
      * Reset the jump counter to zero
      */
     public void reset() {
         jumpCount = 0;
         isInUpwardMotion = false;
         hasValidPrevFrame = false;
+        resetValidationState();
         
         Log.d(TAG, "Jump counter reset to 0");
         if (listener != null) {
