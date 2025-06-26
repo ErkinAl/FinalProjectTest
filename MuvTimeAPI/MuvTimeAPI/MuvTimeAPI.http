@@ -1,0 +1,6 @@
+@MuvTimeAPI_HostAddress = http://localhost:5129
+
+GET {{MuvTimeAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
