@@ -5,26 +5,29 @@ import android.os.Looper;
 import android.util.Log;
 
 /**
- * JumpCounter - Dedicated class for detecting and counting jump events
- * using pose landmark data.
+ * JumpCounter - Ultra-responsive jump detection using frame-to-frame movement analysis
  */
 public class JumpCounter {
-    // Interface for jump event callbacks
     public interface JumpListener {
         void onJumpDetected(int jumpCount);
     }
     
-    // Constants for jump detection tuning
-    private static final float SHOULDER_THRESHOLD = 0.020f; // Threshold for shoulder movement
-    private static final float MIN_CONFIDENCE = 0.05f; // Minimum confidence for a valid keypoint
-    private static final long JUMP_COOLDOWN_MS = 250; // Increased cooldown to prevent double counting
-    private static final String TAG = "JumpCounter"; // Tag for logging
+    // Ultra-responsive constants for instant jump detection
+    private static final float MOVEMENT_THRESHOLD = 0.012f; // Even more sensitive for instant detection
+    private static final float MIN_CONFIDENCE = 0.05f; // Lower confidence for better detection
+    private static final long JUMP_COOLDOWN_MS = 1000; // 1 second cooldown between jumps
+    private static final String TAG = "JumpCounter";
     
-    // Jump tracking state
+    // Frame-to-frame tracking (no smoothing, instant response)
     private int jumpCount = 0;
-    private float prevShoulderY = 0f;
-    private long lastJumpTime = 0;
+    private float[] prevShoulderY = new float[2]; // Left and right shoulders
+    private float[] prevHipY = new float[2]; // Left and right hips
     private boolean isInUpwardMotion = false;
+    private long lastJumpTime = 0;
+    private boolean hasValidPrevFrame = false;
+    
+    // Enhanced detection state
+    private boolean jumpDetectionEnabled = true;
     
     // Callback
     private JumpListener listener;
@@ -35,114 +38,116 @@ public class JumpCounter {
     }
     
     /**
-     * Process new keypoints to detect jumps
-     * @param keypoints List of keypoints from pose detection [x, y, confidence]
+     * Ultra-fast jump detection using frame-to-frame movement analysis
      */
     public void processKeypoints(java.util.List<float[]> keypoints) {
-        if (keypoints == null || keypoints.size() < 7) {
-            return; // Not enough keypoints
+        if (keypoints == null || keypoints.size() < 17 || !jumpDetectionEnabled) {
+            return;
         }
         
         long currentTime = System.currentTimeMillis();
         
-        // Get shoulder positions (keypoints 5 and 6 are left and right shoulders)
-        float leftShoulderY = 0;
-        float leftShoulderConf = 0;
-        float rightShoulderY = 0;
-        float rightShoulderConf = 0;
+        // Get key body parts for jump detection
+        float[] leftShoulder = keypoints.get(5);   // More responsive than baseline
+        float[] rightShoulder = keypoints.get(6);
+        float[] leftHip = keypoints.get(11);       // Hips move more during jumps
+        float[] rightHip = keypoints.get(12);
         
-        if (keypoints.size() >= 7) {
-            float[] leftShoulder = keypoints.get(5);
-            float[] rightShoulder = keypoints.get(6);
-            
-            leftShoulderY = leftShoulder[1];
-            leftShoulderConf = leftShoulder[2];
-            rightShoulderY = rightShoulder[1];
-            rightShoulderConf = rightShoulder[2];
-            
-            // Log raw shoulder data
-            Log.d(TAG, String.format("Raw LEFT shoulder: Y=%.4f, Conf=%.4f", leftShoulderY, leftShoulderConf));
-            Log.d(TAG, String.format("Raw RIGHT shoulder: Y=%.4f, Conf=%.4f", rightShoulderY, rightShoulderConf));
-        }
-        
-        // Calculate weighted average of shoulder positions
-        float shoulderY = 0;
-        float totalWeight = 0;
-        
-        if (leftShoulderConf > MIN_CONFIDENCE) {
-            shoulderY += leftShoulderY * leftShoulderConf;
-            totalWeight += leftShoulderConf;
-        }
-        
-        if (rightShoulderConf > MIN_CONFIDENCE) {
-            shoulderY += rightShoulderY * rightShoulderConf;
-            totalWeight += rightShoulderConf;
-        }
-        
-        // Only process with enough confidence data
-        if (totalWeight < MIN_CONFIDENCE) {
-            Log.d(TAG, "Shoulder confidence too low - skipping frame");
+        // Check if we have enough confidence
+        if (leftShoulder[2] < MIN_CONFIDENCE && rightShoulder[2] < MIN_CONFIDENCE &&
+            leftHip[2] < MIN_CONFIDENCE && rightHip[2] < MIN_CONFIDENCE) {
+            Log.d(TAG, "Not enough confidence for jump detection");
             return;
         }
         
-        // Normalize the position
-        shoulderY /= totalWeight;
+        // Get current Y positions
+        float[] currentShoulderY = {leftShoulder[1], rightShoulder[1]};
+        float[] currentHipY = {leftHip[1], rightHip[1]};
         
-        // Log the weighted average shoulder position
-        Log.d(TAG, String.format("AVERAGED shoulder Y: %.4f (weighted by confidence)", shoulderY));
-        
-        // Always update the previous position for reference
-        if (prevShoulderY == 0) {
-            prevShoulderY = shoulderY;
-            Log.d(TAG, "First shoulder position recorded: " + shoulderY);
+        // Skip first frame (need previous frame for comparison)
+        if (!hasValidPrevFrame) {
+            prevShoulderY[0] = currentShoulderY[0];
+            prevShoulderY[1] = currentShoulderY[1];
+            prevHipY[0] = currentHipY[0];
+            prevHipY[1] = currentHipY[1];
+            hasValidPrevFrame = true;
+            Log.d(TAG, "First frame recorded for jump detection");
             return;
         }
         
-        // Calculate the direction of movement
-        // Negative diff means shoulders are moving UP (Y decreasing)
-        float diff = shoulderY - prevShoulderY;
+        // Calculate frame-to-frame movement (negative = upward)
+        float shoulderMovement = 0;
+        float hipMovement = 0;
+        int validShoulders = 0;
+        int validHips = 0;
         
-        // Log detailed movement data
-        Log.d(TAG, String.format("SHOULDER MOVEMENT: Current=%.4f, Prev=%.4f, Diff=%.4f, UpMotion=%s", 
-                shoulderY, prevShoulderY, diff, isInUpwardMotion));
+        // Calculate average shoulder movement
+        if (leftShoulder[2] > MIN_CONFIDENCE) {
+            shoulderMovement += (currentShoulderY[0] - prevShoulderY[0]);
+            validShoulders++;
+        }
+        if (rightShoulder[2] > MIN_CONFIDENCE) {
+            shoulderMovement += (currentShoulderY[1] - prevShoulderY[1]);
+            validShoulders++;
+        }
+        if (validShoulders > 0) {
+            shoulderMovement /= validShoulders;
+        }
         
-        // State machine for jump detection
-        // We're looking for an upward motion of shoulders (negative diff)
-        if (!isInUpwardMotion && diff < -SHOULDER_THRESHOLD) {
-            // Shoulders moving up - start of upward motion
-            isInUpwardMotion = true;
-            Log.d(TAG, "⬆️ UPWARD MOTION DETECTED - shoulders moving up by " + (-diff));
+        // Calculate average hip movement
+        if (leftHip[2] > MIN_CONFIDENCE) {
+            hipMovement += (currentHipY[0] - prevHipY[0]);
+            validHips++;
+        }
+        if (rightHip[2] > MIN_CONFIDENCE) {
+            hipMovement += (currentHipY[1] - prevHipY[1]);
+            validHips++;
+        }
+        if (validHips > 0) {
+            hipMovement /= validHips;
+        }
+        
+        // Use the most significant movement (shoulders or hips)
+        float totalMovement = 0;
+        if (validShoulders > 0 && validHips > 0) {
+            // Use weighted average (hips are more reliable for jumps)
+            totalMovement = (shoulderMovement * 0.4f + hipMovement * 0.6f);
+        } else if (validShoulders > 0) {
+            totalMovement = shoulderMovement;
+        } else if (validHips > 0) {
+            totalMovement = hipMovement;
+        }
+        
+        Log.d(TAG, String.format("Movement: Shoulders=%.4f, Hips=%.4f, Total=%.4f, UpMotion=%s", 
+                shoulderMovement, hipMovement, totalMovement, isInUpwardMotion));
+        
+        // INSTANT jump detection - count immediately on strong upward movement
+        if (totalMovement < -MOVEMENT_THRESHOLD && currentTime - lastJumpTime > JUMP_COOLDOWN_MS) {
+            // Strong upward movement detected - COUNT IMMEDIATELY!
+            jumpCount++;
+            lastJumpTime = currentTime;
+            isInUpwardMotion = true; // Track state for visual feedback
+            
+            Log.d(TAG, "🚀 INSTANT JUMP DETECTED! Count: " + jumpCount + 
+                  " (movement: " + Math.abs(totalMovement) + ")");
+            
+            // Notify listener immediately - no waiting for downward movement
+            if (listener != null) {
+                final int count = jumpCount;
+                mainHandler.post(() -> listener.onJumpDetected(count));
+            }
         } 
-        // If we were in upward motion and now shoulders move down again,
-        // consider it a completed jump (if sufficient time has passed)
-        else if (isInUpwardMotion && diff > SHOULDER_THRESHOLD) {
-            // Shoulders moving back down - end of jump
+        else if (isInUpwardMotion && totalMovement > 0) {
+            // End of upward motion (for visual state tracking only)
             isInUpwardMotion = false;
-            
-            if (currentTime - lastJumpTime > JUMP_COOLDOWN_MS) {
-                jumpCount++;
-                lastJumpTime = currentTime;
-                Log.d(TAG, "🔄 JUMP COMPLETED! Count: " + jumpCount + " (shoulders moved down by " + diff + ")");
-                
-                // Notify listener on the main thread
-                if (listener != null) {
-                    final int count = jumpCount;
-                    mainHandler.post(() -> listener.onJumpDetected(count));
-                }
-            } else {
-                Log.d(TAG, "⏱️ Jump ignored - too soon after previous jump (cooldown active)");
-            }
-        }
-        // Log small movements that don't trigger state changes
-        else if (Math.abs(diff) > 0.005f) {
-            if (diff < 0) {
-                Log.d(TAG, "Small upward movement: " + (-diff) + " (below threshold)");
-            } else {
-                Log.d(TAG, "Small downward movement: " + diff + " (below threshold)");
-            }
+            Log.d(TAG, "Jump motion completed");
         }
         
-        prevShoulderY = shoulderY;
+        // Update previous frame data
+        prevShoulderY[0] = currentShoulderY[0];
+        prevShoulderY[1] = currentShoulderY[1];
+        prevHipY[0] = currentHipY[0];
+        prevHipY[1] = currentHipY[1];
     }
     
     /**
@@ -151,7 +156,8 @@ public class JumpCounter {
     public void reset() {
         jumpCount = 0;
         isInUpwardMotion = false;
-        prevShoulderY = 0f;
+        hasValidPrevFrame = false;
+        
         Log.d(TAG, "Jump counter reset to 0");
         if (listener != null) {
             mainHandler.post(() -> listener.onJumpDetected(0));
@@ -163,5 +169,53 @@ public class JumpCounter {
      */
     public int getJumpCount() {
         return jumpCount;
+    }
+    
+    /**
+     * Enable or disable jump detection
+     */
+    public void setJumpDetectionEnabled(boolean enabled) {
+        this.jumpDetectionEnabled = enabled;
+        Log.d(TAG, "Jump detection " + (enabled ? "enabled" : "disabled"));
+    }
+    
+    /**
+     * Check if currently in upward motion
+     */
+    public boolean isInUpwardMotion() {
+        return isInUpwardMotion;
+    }
+    
+    /**
+     * Get the quality of pose detection for jump counting
+     */
+    public float getDetectionQuality(java.util.List<float[]> keypoints) {
+        if (keypoints == null || keypoints.size() < 13) {
+            return 0f;
+        }
+        
+        // Check confidence of key points for jump detection
+        float[] leftShoulder = keypoints.get(5);
+        float[] rightShoulder = keypoints.get(6);
+        float[] leftHip = keypoints.get(11);
+        float[] rightHip = keypoints.get(12);
+        
+        float totalConfidence = leftShoulder[2] + rightShoulder[2] + leftHip[2] + rightHip[2];
+        return Math.min(1.0f, totalConfidence / 4.0f);
+    }
+    
+    /**
+     * Set movement sensitivity (lower = more sensitive)
+     */
+    public void setMovementSensitivity(float sensitivity) {
+        // This could be used to adjust MOVEMENT_THRESHOLD if needed
+        Log.d(TAG, "Movement sensitivity could be adjusted to: " + sensitivity);
+    }
+    
+    /**
+     * Get the time of the last detected jump
+     */
+    public long getLastJumpTime() {
+        return lastJumpTime;
     }
 } 

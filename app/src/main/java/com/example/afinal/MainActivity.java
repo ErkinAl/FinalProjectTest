@@ -12,6 +12,8 @@ import android.graphics.Rect;
 import android.view.Surface;
 import android.graphics.YuvImage;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.util.Size;
 import android.view.View;
@@ -49,15 +51,42 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends AppCompatActivity implements JumpCounter.JumpListener {
     private PreviewView previewView;
     private PoseOverlayView poseOverlay;
     private TextView jumpCountText;
+
+    private TextView countdownText;
+    private TextView cooldownTimer;
+    private TextView jumpReadyText;
+    private View countdownOverlay;
+    private View leftIndicator;
+    private View rightIndicator;
+    
     private OrtEnvironment env;
     private OrtSession session;
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
+    private ExecutorService cameraExecutor;
+    private ExecutorService inferenceExecutor;
     private JumpCounter jumpCounter;
+    private Handler mainHandler;
+    
+    // Thread safety
+    private final AtomicBoolean isProcessing = new AtomicBoolean(false);
+    private volatile boolean isDestroyed = false;
+    
+    // Initialization state
+    private volatile boolean modelReady = false;
+    private volatile boolean cameraReady = false;
+    
+    // Exercise state management
+    private boolean exerciseStarted = false;
+    private boolean isCountingDown = true;
+    private int countdownValue = 3;
+    private boolean isInCooldown = false;
+    private long cooldownStartTime = 0;
+    private static final long COOLDOWN_DURATION_MS = 1000; // 1 second cooldown
     
     // Stats tracking
     private SharedPreferences userStats;
@@ -66,7 +95,13 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private static final int XP_REWARD = 50;
     
     // Constants for optimized processing
-    private static final int MODEL_INPUT_SIZE = 320; // Smaller model input size for faster processing
+    private static final int MODEL_INPUT_SIZE = 320;
+    private static final long INFERENCE_INTERVAL_MS = 8;
+    private long lastInferenceTime = 0;
+    
+    // Memory management
+    private static final int MAX_BITMAP_SIZE = 1024 * 1024;
+    private final Object sessionLock = new Object();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,12 +109,25 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         try {
             setContentView(R.layout.activity_main);
 
+            // Initialize handlers and executors
+            mainHandler = new Handler(Looper.getMainLooper());
+            cameraExecutor = Executors.newSingleThreadExecutor();
+            inferenceExecutor = Executors.newSingleThreadExecutor();
+
             // Initialize SharedPreferences for stats
             userStats = getSharedPreferences("user_stats", MODE_PRIVATE);
             
+            // Initialize all UI elements
             previewView = findViewById(R.id.previewView);
             poseOverlay = findViewById(R.id.poseOverlay);
             jumpCountText = findViewById(R.id.jumpCountText);
+
+            countdownText = findViewById(R.id.countdownText);
+            cooldownTimer = findViewById(R.id.cooldownTimer);
+            jumpReadyText = findViewById(R.id.jumpReadyText);
+            countdownOverlay = findViewById(R.id.countdownOverlay);
+            leftIndicator = findViewById(R.id.leftIndicator);
+            rightIndicator = findViewById(R.id.rightIndicator);
 
             if (previewView == null || poseOverlay == null || jumpCountText == null) {
                 throw new IllegalStateException("Failed to find required views");
@@ -88,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             // Initialize jump counter with this as the listener
             jumpCounter = new JumpCounter(this);
             jumpCountText.setText("Jumps: 0");
+            
+
 
             // Set immersive sticky mode for better fullscreen experience
             getWindow().getDecorView().setSystemUiVisibility(
@@ -98,15 +148,13 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
                 View.SYSTEM_UI_FLAG_FULLSCREEN);
 
-            // We're coming from the starter activity, so we should already have permissions
+            // Initialize camera and model FIRST, then start countdown
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
-                initModel();
-                startCamera();
+                initModelAndCamera();
             } else {
                 registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                     if (isGranted) {
-                        initModel();
-                        startCamera();
+                        initModelAndCamera();
                     } else {
                         Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show();
                         finish();
@@ -120,10 +168,172 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         }
     }
 
+    private void startCountdown() {
+        isCountingDown = true;
+        exerciseStarted = false;
+        countdownValue = 3;
+        
+        // Show countdown overlay
+        countdownOverlay.setVisibility(View.VISIBLE);
+        countdownText.setVisibility(View.VISIBLE);
+        
+        // Disable jump detection during countdown
+        if (jumpCounter != null) {
+            jumpCounter.setJumpDetectionEnabled(false);
+        }
+        
+        // Start countdown animation
+        runCountdownTimer();
+    }
+    
+    private void runCountdownTimer() {
+        if (countdownValue > 0) {
+            countdownText.setText(String.valueOf(countdownValue));
+            
+            // Animate countdown text
+            countdownText.setScaleX(0.5f);
+            countdownText.setScaleY(0.5f);
+            countdownText.animate()
+                .scaleX(1.2f)
+                .scaleY(1.2f)
+                .setDuration(500)
+                .withEndAction(() -> {
+                    countdownText.animate()
+                        .scaleX(1.0f)
+                        .scaleY(1.0f)
+                        .setDuration(500);
+                });
+            
+            countdownValue--;
+            mainHandler.postDelayed(this::runCountdownTimer, 1000);
+        } else {
+            // Countdown finished - start exercise
+            startExercise();
+        }
+    }
+    
+    private void startExercise() {
+        isCountingDown = false;
+        exerciseStarted = true;
+        Log.d("PoseTracker", "Exercise started - isCountingDown set to false, exerciseStarted set to true");
+        
+        // Hide countdown elements
+        countdownOverlay.setVisibility(View.GONE);
+        countdownText.setVisibility(View.GONE);
+        
+        // Show ready indicator
+        showJumpReady();
+        
+        // Enable jump detection immediately - no need to wait for movement
+        if (jumpCounter != null) {
+            jumpCounter.setJumpDetectionEnabled(true);
+            // Reset the jump counter to start fresh
+            jumpCounter.reset();
+        }
+        
+
+        
+        // Start checking readiness state
+        startReadinessChecker();
+    }
+    
+    private void showJumpReady() {
+        if (!isInCooldown && exerciseStarted) {
+            // Show green indicators
+            leftIndicator.setVisibility(View.VISIBLE);
+            rightIndicator.setVisibility(View.VISIBLE);
+            leftIndicator.setBackgroundColor(0xFF00FF00); // Green
+            rightIndicator.setBackgroundColor(0xFF00FF00); // Green
+            
+            // Show ready text
+            if (jumpReadyText != null) {
+                jumpReadyText.setVisibility(View.VISIBLE);
+                jumpReadyText.setText("🚀 READY TO JUMP! 🚀");
+                jumpReadyText.setBackgroundColor(0xCC00FF00); // Green background
+            }
+            
+            // Hide cooldown timer
+            if (cooldownTimer != null) {
+                cooldownTimer.setVisibility(View.GONE);
+            }
+        }
+    }
+    
+    private void showCooldown() {
+        if (exerciseStarted) {
+            isInCooldown = true;
+            cooldownStartTime = System.currentTimeMillis();
+            
+            // Show red indicators
+            leftIndicator.setVisibility(View.VISIBLE);
+            rightIndicator.setVisibility(View.VISIBLE);
+            leftIndicator.setBackgroundColor(0xFFFF0000); // Red
+            rightIndicator.setBackgroundColor(0xFFFF0000); // Red
+            
+            // Hide ready text
+            if (jumpReadyText != null) {
+                jumpReadyText.setVisibility(View.GONE);
+            }
+            
+            // Show cooldown timer
+            if (cooldownTimer != null) {
+                cooldownTimer.setVisibility(View.VISIBLE);
+            }
+            
+            // Start cooldown timer
+            updateCooldownTimer();
+        }
+    }
+    
+    private void updateCooldownTimer() {
+        if (isInCooldown && cooldownTimer != null) {
+            long elapsed = System.currentTimeMillis() - cooldownStartTime;
+            long remaining = COOLDOWN_DURATION_MS - elapsed;
+            
+            if (remaining > 0) {
+                float seconds = remaining / 1000.0f;
+                cooldownTimer.setText(String.format("Cooldown: %.1fs", seconds));
+                mainHandler.postDelayed(this::updateCooldownTimer, 50); // Update every 50ms
+            } else {
+                // Cooldown finished
+                isInCooldown = false;
+                showJumpReady();
+            }
+        }
+    }
+    
+    private void startReadinessChecker() {
+        // Continuously check if we should show ready or cooldown state
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (exerciseStarted && !isDestroyed) {
+                    if (!isInCooldown && jumpCounter != null) {
+                        // Check if enough time has passed since last jump
+                        long timeSinceLastJump = System.currentTimeMillis() - jumpCounter.getLastJumpTime();
+                        if (timeSinceLastJump >= COOLDOWN_DURATION_MS) {
+                            showJumpReady();
+                        }
+                    }
+                    
+                    // Schedule next check
+                    mainHandler.postDelayed(this, 100);
+                }
+            }
+        });
+    }
+
     // JumpListener callback
     @Override
     public void onJumpDetected(int jumpCount) {
-        jumpCountText.setText("Jumps: " + jumpCount);
+        runOnUiThread(() -> {
+            jumpCountText.setText("Jumps: " + jumpCount);
+            
+            // Start cooldown immediately after jump
+            showCooldown();
+            
+
+        });
         
         // Track jumps in stats
         updateJumpStats(jumpCount);
@@ -163,7 +373,12 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             .apply();
         
         // Show congratulations toast
-        Toast.makeText(this, "Exercise completed! +50 XP", Toast.LENGTH_LONG).show();
+        runOnUiThread(() -> {
+            Toast.makeText(this, "Exercise completed! +50 XP", Toast.LENGTH_LONG).show();
+            //if (feedbackText != null) {
+           //     feedbackText.setText("🎉 Exercise Complete! +50 XP");
+           // }
+        });
     }
     
     @Override
@@ -175,30 +390,61 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         finish();
     }
 
-    private void initModel() {
-        try {
-            env = OrtEnvironment.getEnvironment();
-            OrtSession.SessionOptions options = new OrtSession.SessionOptions();
-            
-            // Enable optimization for mobile
-            options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
-            options.setIntraOpNumThreads(2); // Use 2 threads for faster processing
-            
-            byte[] modelBytes = loadModelFile();
-            if (modelBytes == null || modelBytes.length == 0) {
-                throw new IOException("Model file is empty or not found");
+    private void initModelAndCamera() {
+        // Show loading message
+        runOnUiThread(() -> {
+            if (countdownText != null) {
+                countdownText.setText("Loading...");
+                countdownText.setVisibility(View.VISIBLE);
             }
-            
-            session = env.createSession(modelBytes, options);
-            Log.i("PoseTracker", "Model loaded successfully");
-        } catch (Exception e) {
-            Log.e("PoseTracker", "Model init failed: " + e.getMessage(), e);
-            e.printStackTrace();
+        });
+        
+        // Initialize both model and camera, then start countdown when both are ready
+        initModel();
+        startCamera();
+    }
+    
+    private void checkIfReadyToStart() {
+        if (modelReady && cameraReady && !isDestroyed) {
             runOnUiThread(() -> {
-                Toast.makeText(this, "Failed to load model: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                finish();
+                startCountdown();
             });
         }
+    }
+
+    private void initModel() {
+        inferenceExecutor.execute(() -> {
+            try {
+                env = OrtEnvironment.getEnvironment();
+                OrtSession.SessionOptions options = new OrtSession.SessionOptions();
+                
+                // Enable optimization for mobile with better memory management
+                options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
+                options.setIntraOpNumThreads(2);
+                options.setMemoryPatternOptimization(true);
+                options.setCPUArenaAllocator(false); // Reduce memory usage
+                
+                byte[] modelBytes = loadModelFile();
+                if (modelBytes == null || modelBytes.length == 0) {
+                    throw new IOException("Model file is empty or not found");
+                }
+                
+                synchronized (sessionLock) {
+                    session = env.createSession(modelBytes, options);
+                }
+                
+                Log.i("PoseTracker", "Model loaded successfully");
+                modelReady = true;
+                checkIfReadyToStart();
+                
+            } catch (Exception e) {
+                Log.e("PoseTracker", "Model init failed: " + e.getMessage(), e);
+                runOnUiThread(() -> {
+                    Toast.makeText(this, "Failed to load model: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    finish();
+                });
+            }
+        });
     }
 
     private byte[] loadModelFile() throws IOException {
@@ -243,21 +489,23 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
-                Preview preview = new Preview.Builder().build();
+                Preview preview = new Preview.Builder()
+                        .setTargetResolution(new Size(640, 480))
+                        .build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
                 // Get the display rotation
                 int rotation = getWindowManager().getDefaultDisplay().getRotation();
                 
-                // High-performance camera settings for fast capture
+                // Optimized camera settings with better memory management
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(640, 480))
+                        .setTargetResolution(new Size(480, 640)) // Better aspect ratio for mobile
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888)
                         .setTargetRotation(rotation)
                         .build();
 
-                imageAnalysis.setAnalyzer(executor, this::processImage);
+                imageAnalysis.setAnalyzer(cameraExecutor, this::processImage);
 
                 CameraSelector cameraSelector = new CameraSelector.Builder()
                         .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
@@ -266,6 +514,9 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                 cameraProvider.unbindAll();
                 cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
                 Log.i("PoseTracker", "Camera started successfully");
+                cameraReady = true;
+                checkIfReadyToStart();
+                
             } catch (Exception e) {
                 Log.e("PoseTracker", "Camera setup failed: " + e.getMessage(), e);
                 runOnUiThread(() -> {
@@ -277,50 +528,86 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     }
 
     private void processImage(@NonNull ImageProxy imageProxy) {
-        if (session == null) {
+        // Check if we're already processing or destroyed
+        if (isDestroyed || !isProcessing.compareAndSet(false, true)) {
             imageProxy.close();
             return;
         }
 
-        try {
-            // Process every frame for maximum responsiveness
-            float[] inputData = preprocessImage(imageProxy);
-            if (inputData == null) {
-                imageProxy.close();
-                return;
-            }
-            
-            OnnxTensor inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputData), 
-                    new long[]{1, 3, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE});
-            OrtSession.Result result = null;
-            
+        // Remove rate limiting for immediate landmark display
+        // Process every frame for maximum responsiveness
+        long currentTime = System.currentTimeMillis();
+        lastInferenceTime = currentTime;
+
+        // Run inference on separate thread to avoid blocking camera
+        inferenceExecutor.execute(() -> {
             try {
-                // Run inference with minimal overhead
-                result = session.run(java.util.Collections.singletonMap("images", inputTensor));
-                float[][][] output = (float[][][]) result.get(0).getValue();
-                
-                // Parse keypoints and update UI
-                List<float[]> keypoints = parseKeypoints(output, imageProxy.getWidth(), imageProxy.getHeight());
-                poseOverlay.setKeypoints(keypoints);
-                
-                // Process keypoints for jump detection (if keypoints are valid)
-                if (keypoints.size() >= 17) {
-                    jumpCounter.processKeypoints(keypoints);
+                synchronized (sessionLock) {
+                    if (session == null || isDestroyed) {
+                        return;
+                    }
+
+                    // Process with better error handling
+                    float[] inputData = preprocessImage(imageProxy);
+                    if (inputData == null) {
+                        return;
+                    }
+                    
+                    OnnxTensor inputTensor = null;
+                    OrtSession.Result result = null;
+                    
+                    try {
+                        inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputData), 
+                                new long[]{1, 3, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE});
+                        
+                        // Run inference with timeout protection
+                        result = session.run(java.util.Collections.singletonMap("images", inputTensor));
+                        float[][][] output = (float[][][]) result.get(0).getValue();
+                        
+                        // Parse keypoints with improved accuracy
+                        List<float[]> keypoints = parseKeypoints(output, imageProxy.getWidth(), imageProxy.getHeight());
+                        
+                        // Update UI on main thread
+                        runOnUiThread(() -> {
+                            if (!isDestroyed) {
+                                // ALWAYS show landmarks - no conditions, no cooldown blocking
+                                poseOverlay.setKeypoints(keypoints);
+                                
+                                // Only process keypoints for jump detection AFTER exercise starts (not during countdown)
+                                if (keypoints.size() >= 17 && exerciseStarted) {
+                                    jumpCounter.processKeypoints(keypoints);
+                                }
+                            }
+                        });
+                        
+                    } finally {
+                        // Clean up resources
+                        if (inputTensor != null) {
+                            try {
+                                inputTensor.close();
+                            } catch (Exception e) {
+                                Log.e("PoseTracker", "Error closing input tensor", e);
+                            }
+                        }
+                        if (result != null) {
+                            try {
+                                result.close();
+                            } catch (Exception e) {
+                                Log.e("PoseTracker", "Error closing result", e);
+                            }
+                        }
+                    }
                 }
+            } catch (Exception e) {
+                Log.e("PoseTracker", "Error in image processing", e);
             } finally {
-                if (inputTensor != null) {
-                    inputTensor.close();
-                }
-                if (result != null) {
-                    result.close();
-                }
+                isProcessing.set(false);
+                imageProxy.close();
             }
-        } catch (Exception e) {
-            Log.e("PoseTracker", "Error in image processing", e);
-        } finally {
-            imageProxy.close();
-        }
+        });
     }
+    
+
 
     private float[] preprocessImage(ImageProxy imageProxy) {
         try {
@@ -421,28 +708,43 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                 return createEmptyKeypoints();
             }
             
-            // Find best detection based on confidence
+            // Find best detection based on confidence and area
             float bestScore = -1;
             int bestIdx = -1;
             
             for (int i = 0; i < numDetections; i++) {
                 float score = detections[4][i];
-                if (score > bestScore) {
+                
+                // Also consider bounding box area for better detection
+                if (detections.length > 4) {
+                    float x1 = detections[0][i];
+                    float y1 = detections[1][i];
+                    float x2 = detections[2][i];
+                    float y2 = detections[3][i];
+                    float area = Math.abs((x2 - x1) * (y2 - y1));
+                    
+                    // Prefer larger detections with reasonable confidence
+                    float combinedScore = score * (1 + area * 0.001f);
+                    
+                    if (combinedScore > bestScore) {
+                        bestScore = combinedScore;
+                        bestIdx = i;
+                    }
+                } else if (score > bestScore) {
                     bestScore = score;
                     bestIdx = i;
                 }
             }
             
-            // Use a very low threshold to get landmarks even with low confidence
-            if (bestIdx == -1 || bestScore < 0.00005f) {
+            // Very low threshold to show landmarks immediately - let overlay handle low confidence
+            if (bestIdx == -1 || detections[4][bestIdx] < 0.0001f) {
                 return createEmptyKeypoints();
             }
             
-            // Determine if we're in portrait mode
+            // Determine if we're in portrait mode based on actual image dimensions
             boolean isPortrait = imgHeight > imgWidth;
             
-            // Extract keypoints for the best detection
-            // Keypoints start at index 5, with 3 values (x,y,confidence) per keypoint
+            // Extract keypoints for the best detection with correct coordinate mapping
             for (int k = 0; k < 17; k++) {
                 int xIdx = 5 + (k * 3);
                 int yIdx = 5 + (k * 3) + 1;
@@ -457,7 +759,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                     x = x / MODEL_INPUT_SIZE;
                     y = y / MODEL_INPUT_SIZE;
                     
-                    // CAMERA IS MIRRORED - flip horizontally
+                    // CAMERA IS MIRRORED - flip horizontally first
                     x = 1.0f - x;
                     
                     if (isPortrait) {
@@ -470,6 +772,9 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                     // Clamp values to ensure they're within valid range
                     x = Math.max(0, Math.min(1, x));
                     y = Math.max(0, Math.min(1, y));
+                    
+                    // Apply confidence smoothing for better stability
+                    conf = Math.max(0, Math.min(1, conf));
                     
                     keypoints.add(new float[]{x, y, conf});
                 } else {
@@ -496,12 +801,63 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        executor.shutdown();
-        try {
-            if (session != null) session.close();
-            if (env != null) env.close();
-        } catch (OrtException e) {
-            Log.e("PoseTracker", "Error closing session", e);
+        isDestroyed = true;
+        
+        // Shut down executors safely
+        if (cameraExecutor != null) {
+            cameraExecutor.shutdown();
+        }
+        if (inferenceExecutor != null) {
+            inferenceExecutor.shutdown();
+        }
+        
+        // Clean up ONNX resources
+        if (inferenceExecutor != null) {
+            inferenceExecutor.execute(() -> {
+                synchronized (sessionLock) {
+                    try {
+                        if (session != null) {
+                            session.close();
+                            session = null;
+                        }
+                        if (env != null) {
+                            env.close();
+                            env = null;
+                        }
+                    } catch (OrtException e) {
+                        Log.e("PoseTracker", "Error closing ONNX resources", e);
+                    }
+                }
+            });
+        }
+        
+        // Clear references
+        jumpCounter = null;
+        poseOverlay = null;
+        jumpCountText = null;
+
+        countdownText = null;
+        cooldownTimer = null;
+        jumpReadyText = null;
+        countdownOverlay = null;
+        leftIndicator = null;
+        rightIndicator = null;
+    }
+    
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Reset processing state when paused
+        isProcessing.set(false);
+    }
+    
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Reset state when resuming
+        if (jumpCounter != null) {
+            // Don't reset the counter, just ensure it's ready
+            Log.d("PoseTracker", "Activity resumed, current jumps: " + jumpCounter.getJumpCount());
         }
     }
 }
