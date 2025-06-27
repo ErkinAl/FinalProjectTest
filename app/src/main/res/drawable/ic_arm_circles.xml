@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Person head -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M12,2m-2,0a2,2 0,1 1,4 0a2,2 0,1 1,-4 0"/>
+    <!-- Body -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M10,6h4v8h-4z"/>
+    <!-- Left arm circle motion (using stroke) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF9800"
+        android:strokeWidth="2"
+        android:pathData="M6,10m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+    <!-- Right arm circle motion (using stroke) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FF9800"
+        android:strokeWidth="2"
+        android:pathData="M18,10m-3,0a3,3 0,1 1,6 0a3,3 0,1 1,-6 0"/>
+    <!-- Left arm -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M8,8h2v4h-2z"/>
+    <!-- Right arm -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M14,8h2v4h-2z"/>
+    <!-- Legs -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M10,14h2v6h-2z"/>
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M12,14h2v6h-2z"/>
+</vector> 

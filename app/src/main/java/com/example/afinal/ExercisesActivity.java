@@ -28,16 +28,27 @@ public class ExercisesActivity extends AppCompatActivity {
             View.SYSTEM_UI_FLAG_HIDE_NAVIGATION |
             View.SYSTEM_UI_FLAG_FULLSCREEN);
             
-        // Find the jump exercise card
+        // Find the exercise cards
         CardView jumpExerciseCard = findViewById(R.id.jumpExerciseCard);
+        CardView armCirclesExerciseCard = findViewById(R.id.armCirclesExerciseCard);
         
         // Apply floating animation for a more playful look
         jumpExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
+        armCirclesExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
         
         // Set click listener for the jump exercise card
         jumpExerciseCard.setOnClickListener(v -> {
-            // Launch the tutorial activity first
+            // Launch the tutorial activity for jumping
             Intent intent = new Intent(ExercisesActivity.this, TutorialActivity.class);
+            intent.putExtra("exercise_type", "jump");
+            startActivity(intent);
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        });
+        
+        // Set click listener for the arm circles exercise card
+        armCirclesExerciseCard.setOnClickListener(v -> {
+            // Launch the tutorial activity for arm circles
+            Intent intent = new Intent(ExercisesActivity.this, ArmCirclesTutorialActivity.class);
             startActivity(intent);
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         });

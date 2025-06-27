@@ -53,7 +53,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MainActivity extends AppCompatActivity implements JumpCounter.JumpListener {
+public class MainActivity extends AppCompatActivity implements JumpCounter.JumpListener, ArmCircleCounter.ArmCircleListener {
     private PreviewView previewView;
     private PoseOverlayView poseOverlay;
     private TextView jumpCountText;
@@ -74,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private ExecutorService cameraExecutor;
     private ExecutorService inferenceExecutor;
     private JumpCounter jumpCounter;
+    private ArmCircleCounter armCircleCounter;
     private Handler mainHandler;
     
     // Thread safety
@@ -97,8 +98,13 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private SharedPreferences userStats;
     private boolean exerciseCompleted = false;
     private static final int JUMPS_TO_COMPLETE = 20;
+    private static final int ARM_CIRCLES_TO_COMPLETE = 20;
     private static final int XP_REWARD = 20;
     private int remainingJumps = 20; // Countdown from 20 to 0
+    
+    // Exercise type management
+    private String exerciseType = "jump"; // Default to jump exercise
+    private int remainingReps = 20; // Generic counter for any exercise
     
     // Constants for optimized processing
     private static final int MODEL_INPUT_SIZE = 320;
@@ -123,6 +129,19 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             // Initialize SharedPreferences for stats
             userStats = getSharedPreferences("user_stats", MODE_PRIVATE);
             
+            // Get exercise type from intent
+            exerciseType = getIntent().getStringExtra("exercise_type");
+            if (exerciseType == null) {
+                exerciseType = "jump"; // Default to jump
+            }
+            
+            // Set appropriate rep count based on exercise type
+            if ("arm_circles".equals(exerciseType)) {
+                remainingReps = ARM_CIRCLES_TO_COMPLETE;
+            } else {
+                remainingReps = JUMPS_TO_COMPLETE;
+            }
+            
             // Initialize all UI elements
             previewView = findViewById(R.id.previewView);
             poseOverlay = findViewById(R.id.poseOverlay);
@@ -145,7 +164,9 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             
             // Initialize jump counter with this as the listener
             jumpCounter = new JumpCounter(this);
-            jumpCountText.setText("Jumps: " + remainingJumps);
+            // Initialize arm circle counter with this as the listener
+            armCircleCounter = new ArmCircleCounter(this);
+            updateCounterText();
             
 
 
@@ -239,9 +260,10 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             jumpCounter.setJumpDetectionEnabled(true);
             // Reset the jump counter to start fresh
             jumpCounter.reset();
-            // Reset remaining jumps for countdown
-            remainingJumps = JUMPS_TO_COMPLETE;
-            jumpCountText.setText("Jumps: " + remainingJumps);
+        armCircleCounter.reset();
+            // Reset remaining reps for countdown
+            remainingReps = ("arm_circles".equals(exerciseType)) ? ARM_CIRCLES_TO_COMPLETE : JUMPS_TO_COMPLETE;
+            updateCounterText();
         }
         
 
@@ -377,10 +399,14 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     // JumpListener callback
     @Override
     public void onJumpDetected(int jumpCount) {
+        // Only process jump detection if we're doing jump exercises
+        if (!"jump".equals(exerciseType)) {
+            return;
+        }
+        
         runOnUiThread(() -> {
-            // Countdown from 20 to 0
-            remainingJumps = JUMPS_TO_COMPLETE - jumpCount;
-            jumpCountText.setText("Jumps: " + remainingJumps);
+            remainingReps = JUMPS_TO_COMPLETE - jumpCount;
+            updateCounterText();
             
             // Play cool jump animation
             playJumpAnimation();
@@ -393,9 +419,46 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         updateJumpStats(jumpCount);
         
         // Check if exercise is completed (when countdown reaches 0)
-        if (!exerciseCompleted && remainingJumps <= 0) {
+        if (!exerciseCompleted && remainingReps <= 0) {
             exerciseCompleted = true;
             completeExercise();
+        }
+    }
+    
+    // ArmCircleListener callback
+    @Override
+    public void onArmCircleDetected(int armCircleCount) {
+        // Only process arm circle detection if we're doing arm circle exercises
+        if (!"arm_circles".equals(exerciseType)) {
+            return;
+        }
+        
+        runOnUiThread(() -> {
+            remainingReps = ARM_CIRCLES_TO_COMPLETE - armCircleCount;
+            updateCounterText();
+            
+            // Play animation (can reuse jump animation or create specific arm circle animation)
+            playJumpAnimation();
+            
+            // Start cooldown immediately after arm circle
+            showCooldown();
+        });
+        
+        // Track arm circles in stats (reuse jump stats for now)
+        updateJumpStats(armCircleCount);
+        
+        // Check if exercise is completed (when countdown reaches 0)
+        if (!exerciseCompleted && remainingReps <= 0) {
+            exerciseCompleted = true;
+            completeExercise();
+        }
+    }
+    
+    private void updateCounterText() {
+        if ("arm_circles".equals(exerciseType)) {
+            jumpCountText.setText("Arm Circles: " + remainingReps);
+        } else {
+            jumpCountText.setText("Jumps: " + remainingReps);
         }
     }
     
@@ -746,10 +809,15 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                                 // ALWAYS show landmarks - no conditions, no cooldown blocking
                 poseOverlay.setKeypoints(keypoints);
                 
-                                // Only process keypoints for jump detection AFTER exercise starts (not during countdown)
+                                // Only process keypoints for detection AFTER exercise starts (not during countdown)
                                 if (keypoints.size() >= 17 && exerciseStarted) {
-                    jumpCounter.processKeypoints(keypoints);
-                }
+                                    // Use appropriate counter based on exercise type
+                                    if ("arm_circles".equals(exerciseType)) {
+                                        armCircleCounter.processKeypoints(keypoints);
+                                    } else {
+                                        jumpCounter.processKeypoints(keypoints);
+                                    }
+                                }
                             }
                         });
                         
