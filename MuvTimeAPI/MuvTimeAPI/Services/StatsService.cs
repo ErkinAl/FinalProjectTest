@@ -30,14 +30,14 @@ public class StatsService : IStatsService
         };
     }
 
-    public async Task<StatsDto> UpdateUserStatsAsync(string userId, UpdateStatsRequest request)
+    public async Task<StatsDto> UpdateUserStatsAsync(string userId, int jumpsCompleted, int xpEarned, int sessionDuration)
     {
         var userStats = await GetOrCreateUserStatsAsync(userId);
         
         // Update stats
-        userStats.TotalJumps += request.JumpsCompleted;
+        userStats.TotalJumps += jumpsCompleted;
         userStats.ExercisesCompleted += 1;
-        userStats.Xp += request.XpEarned;
+        userStats.Xp += xpEarned;
         userStats.Level = CalculateLevel(userStats.Xp);
         userStats.UpdatedAt = DateTime.UtcNow;
 
@@ -51,9 +51,9 @@ public class StatsService : IStatsService
             Id = Guid.NewGuid().ToString(),
             UserId = userId,
             ExerciseType = "jump_counter",
-            JumpsCompleted = request.JumpsCompleted,
-            XpEarned = request.XpEarned,
-            SessionDuration = request.SessionDuration,
+            JumpsCompleted = jumpsCompleted,
+            XpEarned = xpEarned,
+            SessionDuration = sessionDuration,
             CompletedAt = DateTime.UtcNow
         };
 
@@ -71,15 +71,15 @@ public class StatsService : IStatsService
         };
     }
 
-    public async Task<List<SessionDto>> GetUserSessionsAsync(string userId, int limit = 10)
+    public async Task<List<ExerciseSessionDto>> GetUserSessionsAsync(string userId)
     {
         var sessions = await _supabaseClient.From<ExerciseSession>()
             .Where(s => s.UserId == userId)
             .Order("completed_at", Supabase.Postgrest.Constants.Ordering.Descending)
-            .Limit(limit)
+            .Limit(10)
             .Get();
 
-        return sessions.Models.Select(s => new SessionDto
+        return sessions.Models.Select(s => new ExerciseSessionDto
         {
             Id = s.Id,
             ExerciseType = s.ExerciseType,
@@ -90,7 +90,7 @@ public class StatsService : IStatsService
         }).ToList();
     }
 
-    public async Task ResetUserStatsAsync(string userId)
+    public async Task<StatsDto> ResetUserStatsAsync(string userId)
     {
         var userStats = await GetOrCreateUserStatsAsync(userId);
         
@@ -102,6 +102,52 @@ public class StatsService : IStatsService
 
         await _supabaseClient.From<UserStats>()
             .Update(userStats);
+
+        return new StatsDto
+        {
+            Level = userStats.Level,
+            Xp = userStats.Xp,
+            TotalJumps = userStats.TotalJumps,
+            ExercisesCompleted = userStats.ExercisesCompleted,
+            XpToNextLevel = CalculateXpToNextLevel(userStats.Xp),
+            CurrentLevelXp = CalculateCurrentLevelXp(userStats.Xp)
+        };
+    }
+
+    public async Task<StatsDto> InitializeUserStatsAsync(string userId, string displayName, string email)
+    {
+        // Check if user profile exists, create if not
+        var profileResponse = await _supabaseClient.From<UserProfile>()
+            .Where(p => p.Id == userId)
+            .Get();
+
+        if (profileResponse.Models.Count == 0)
+        {
+            var newProfile = new UserProfile
+            {
+                Id = userId,
+                DisplayName = displayName,
+                Email = email,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _supabaseClient.From<UserProfile>()
+                .Insert(newProfile);
+        }
+
+        // Get or create user stats
+        var userStats = await GetOrCreateUserStatsAsync(userId);
+
+        return new StatsDto
+        {
+            Level = userStats.Level,
+            Xp = userStats.Xp,
+            TotalJumps = userStats.TotalJumps,
+            ExercisesCompleted = userStats.ExercisesCompleted,
+            XpToNextLevel = CalculateXpToNextLevel(userStats.Xp),
+            CurrentLevelXp = CalculateCurrentLevelXp(userStats.Xp)
+        };
     }
 
     private async Task<UserStats> GetOrCreateUserStatsAsync(string userId)

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MuvTimeAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ddeadeafd28583132747514d3e4ad6b49bd636a2")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b2e4d751a19aa843c824c179a1d08bdedf475542")]
 [assembly: System.Reflection.AssemblyProductAttribute("MuvTimeAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MuvTimeAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -25,7 +25,7 @@ public class StatsController : ControllerBase
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
@@ -34,40 +34,67 @@ public class StatsController : ControllerBase
     {
         try
         {
-            var stats = await _statsService.UpdateUserStatsAsync(userId, request);
+            var stats = await _statsService.UpdateUserStatsAsync(userId, request.JumpsCompleted, request.XpEarned, request.SessionDuration);
             return Ok(stats);
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
     [HttpGet("{userId}/sessions")]
-    public async Task<ActionResult<List<SessionDto>>> GetUserSessions(string userId, [FromQuery] int limit = 10)
+    public async Task<ActionResult<List<ExerciseSessionDto>>> GetUserSessions(string userId)
     {
         try
         {
-            var sessions = await _statsService.GetUserSessionsAsync(userId, limit);
+            var sessions = await _statsService.GetUserSessionsAsync(userId);
             return Ok(sessions);
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
     [HttpPost("{userId}/reset")]
-    public async Task<ActionResult> ResetUserStats(string userId)
+    public async Task<ActionResult<StatsDto>> ResetUserStats(string userId)
     {
         try
         {
-            await _statsService.ResetUserStatsAsync(userId);
-            return Ok(new { message = "Stats reset successfully" });
+            var stats = await _statsService.ResetUserStatsAsync(userId);
+            return Ok(stats);
         }
         catch (Exception ex)
         {
-            return BadRequest(new { error = ex.Message });
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
+
+    [HttpPost("{userId}/initialize")]
+    public async Task<ActionResult<StatsDto>> InitializeUserStats(string userId, [FromBody] InitializeUserRequest request)
+    {
+        try
+        {
+            var stats = await _statsService.InitializeUserStatsAsync(userId, request.DisplayName, request.Email);
+            return Ok(stats);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+}
+
+public class UpdateStatsRequest
+{
+    public int JumpsCompleted { get; set; }
+    public int XpEarned { get; set; }
+    public int SessionDuration { get; set; }
+}
+
+public class InitializeUserRequest
+{
+    public string DisplayName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
 } 

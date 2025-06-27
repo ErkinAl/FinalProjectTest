@@ -90,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private int countdownValue = 3;
     private boolean isInCooldown = false;
     private long cooldownStartTime = 0;
+    private long exerciseStartTime = 0; // Track when exercise started
     private static final long COOLDOWN_DURATION_MS = 1000; // 1 second cooldown
     
     // Stats tracking
@@ -224,6 +225,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private void startExercise() {
         isCountingDown = false;
         exerciseStarted = true;
+        exerciseStartTime = System.currentTimeMillis(); // Track exercise start time
         Log.d("PoseTracker", "Exercise started - isCountingDown set to false, exerciseStarted set to true");
         
         // Hide countdown elements
@@ -415,17 +417,69 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     }
     
     private void completeExercise() {
-        // Award XP for completing the exercise
-        int currentXp = userStats.getInt("xp", 0);
-        int exercisesCompleted = userStats.getInt("exercises_completed", 0);
+        android.util.Log.d("MainActivity", "Exercise completed! Updating database...");
         
-        userStats.edit()
-            .putInt("xp", currentXp + XP_REWARD)
-            .putInt("exercises_completed", exercisesCompleted + 1)
-            .apply();
+        // Update stats via API (database)
+        ApiService apiService = new ApiService();
+        String userId = ApiService.getUserId(this);
         
-        // Show congratulations screen overlay
-        showCongratulationsScreen();
+        // Calculate session duration (in seconds)
+        long sessionDuration = (System.currentTimeMillis() - exerciseStartTime) / 1000;
+        
+        android.util.Log.d("MainActivity", "Sending to API - User: " + userId + ", Jumps: " + JUMPS_TO_COMPLETE + ", XP: " + XP_REWARD + ", Duration: " + sessionDuration + "s");
+        
+        // Check if user ID is valid
+        if (userId == null || userId.isEmpty()) {
+            android.util.Log.e("MainActivity", "ERROR: User ID is null or empty! User may not be logged in.");
+            android.widget.Toast.makeText(this, "Error: Please log in again", android.widget.Toast.LENGTH_LONG).show();
+            return;
+        }
+        
+        // Add timeout to API call and detailed logging
+        android.util.Log.d("MainActivity", "🔄 Starting API call to update database...");
+        
+        apiService.updateUserStats(userId, JUMPS_TO_COMPLETE, XP_REWARD, (int) sessionDuration)
+            .thenAccept(updatedStats -> {
+                // Database update successful!
+                runOnUiThread(() -> {
+                    android.util.Log.d("MainActivity", "✅ DATABASE UPDATE SUCCESS! New stats - Level: " + updatedStats.level + ", XP: " + updatedStats.xp + ", Total Jumps: " + updatedStats.totalJumps);
+                    android.widget.Toast.makeText(this, "✅ Database updated successfully!", android.widget.Toast.LENGTH_SHORT).show();
+                    
+                    // Update local cache with fresh database data
+                    userStats.edit()
+                        .putInt("xp", updatedStats.xp)
+                        .putInt("level", updatedStats.level)
+                        .putInt("jump_count", updatedStats.totalJumps)
+                        .putInt("exercises_completed", updatedStats.exercisesCompleted)
+                        .apply();
+                    
+                    // Database update successful - no need to show message
+                    
+                    // Show congratulations screen overlay
+                    showCongratulationsScreen();
+                });
+            })
+            .exceptionally(throwable -> {
+                // Database update failed - use local fallback
+                runOnUiThread(() -> {
+                    android.util.Log.e("MainActivity", "DATABASE UPDATE FAILED! Error: " + throwable.getMessage(), throwable);
+                    android.widget.Toast.makeText(this, "⚠️ Database update failed - check connection", android.widget.Toast.LENGTH_LONG).show();
+                    
+                    // Update local stats as fallback
+                    int currentXp = userStats.getInt("xp", 0);
+                    int currentJumps = userStats.getInt("jump_count", 0);
+                    int exercisesCompleted = userStats.getInt("exercises_completed", 0);
+                    
+                    userStats.edit()
+                        .putInt("xp", currentXp + XP_REWARD)
+                        .putInt("jump_count", currentJumps + JUMPS_TO_COMPLETE)
+                        .putInt("exercises_completed", exercisesCompleted + 1)
+                        .apply();
+                    
+                    showCongratulationsScreen();
+                });
+                return null;
+            });
     }
     
     private void showCongratulationsScreen() {

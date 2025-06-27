@@ -54,5 +54,14 @@ dependencies {
     // Permissions
     implementation("androidx.activity:activity:1.9.3")
 
+    // HTTP Client for API communication
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.code.gson:gson:2.10.1")
+
+    // Supabase Android SDK for Authentication
+    implementation("io.github.jan-tennert.supabase:postgrest-kt:2.6.0")
+    implementation("io.github.jan-tennert.supabase:gotrue-kt:2.6.0")
+    implementation("io.ktor:ktor-client-android:2.3.12")
+
 
 }

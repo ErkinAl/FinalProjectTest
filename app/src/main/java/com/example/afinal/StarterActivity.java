@@ -27,12 +27,23 @@ public class StarterActivity extends AppCompatActivity {
         // Apply pulsing animation
         playButton.startAnimation(AnimationUtils.loadAnimation(this, R.anim.pulse));
         
-        // Set click listener to start the exercises activity
+        // Set click listener to check authentication and navigate
         playButton.setOnClickListener(v -> {
             // Stop animation when clicked
             playButton.clearAnimation();
             
-            Intent intent = new Intent(StarterActivity.this, ExercisesActivity.class);
+            // Check if user is logged in
+            String userId = AuthActivity.getCurrentUserId(this);
+            Intent intent;
+            
+            if (userId != null && !userId.isEmpty()) {
+                // User is logged in, go to exercises
+                intent = new Intent(StarterActivity.this, ExercisesActivity.class);
+            } else {
+                // User not logged in, go to authentication
+                intent = new Intent(StarterActivity.this, AuthActivity.class);
+            }
+            
             startActivity(intent);
             
             // Apply transition animation

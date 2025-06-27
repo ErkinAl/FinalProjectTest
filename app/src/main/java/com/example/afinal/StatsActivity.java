@@ -62,7 +62,8 @@ public class StatsActivity extends AppCompatActivity {
                 finish();
                 return true;
             } else if (itemId == R.id.nav_stats) {
-                // Already on stats screen
+                // Refresh stats when stats tab is tapped
+                loadStats();
                 return true;
             }
             return false;
@@ -99,25 +100,91 @@ public class StatsActivity extends AppCompatActivity {
     }
     
     private void loadStats() {
+        // Always prioritize database data - clear local cache first
+        clearLocalCache();
+        
+        // Show loading state
+        showLoadingState();
+        
+        // Load stats from API (database)
+        ApiService apiService = new ApiService();
+        String userId = ApiService.getUserId(this);
+        
+        android.util.Log.d("StatsActivity", "Loading stats for user ID: " + userId);
+        
+        apiService.getUserStats(userId)
+            .thenAccept(stats -> {
+                runOnUiThread(() -> {
+                    android.util.Log.d("StatsActivity", "API Response - Level: " + stats.level + ", XP: " + stats.xp + ", Jumps: " + stats.totalJumps);
+                    
+                    // Update UI with fresh database data
+                    updateStatsDisplay(stats.level, stats.xp, stats.totalJumps, stats.exercisesCompleted, stats.currentLevelXp);
+                    
+                    // Update local storage with latest database data
+                    SharedPreferences prefs = getSharedPreferences("user_stats", MODE_PRIVATE);
+                    prefs.edit()
+                        .putInt("xp", stats.xp)
+                        .putInt("level", stats.level)
+                        .putInt("jump_count", stats.totalJumps)
+                        .putInt("exercises_completed", stats.exercisesCompleted)
+                        .apply();
+                    
+                    hideLoadingState();
+                });
+            })
+            .exceptionally(throwable -> {
+                // API call failed - check the specific error
+                runOnUiThread(() -> {
+                    String errorMessage = throwable.getMessage();
+                    android.util.Log.e("StatsActivity", "API failed: " + errorMessage, throwable);
+                    
+                    // Check if it's a network connectivity issue or API server issue
+                    if (errorMessage != null && (errorMessage.contains("ConnectException") || 
+                                                errorMessage.contains("UnknownHostException") ||
+                                                errorMessage.contains("SocketTimeoutException"))) {
+                        // Network/server connection issue
+                        android.widget.Toast.makeText(this, "Cannot connect to server - using cached data", android.widget.Toast.LENGTH_SHORT).show();
+                    } else {
+                        // Other API error - don't show offline message since we have internet
+                        android.widget.Toast.makeText(this, "Loading stats...", android.widget.Toast.LENGTH_SHORT).show();
+                    }
+                    
+                    SharedPreferences prefs = getSharedPreferences("user_stats", MODE_PRIVATE);
+                    
+                    int xp = prefs.getInt("xp", 0);
+                    int jumpCount = prefs.getInt("jump_count", 0);
+                    int exercisesCompleted = prefs.getInt("exercises_completed", 0);
+                    int level = prefs.getInt("level", 0);
+                    int progressToNextLevel = xp % 100;
+                    
+                    updateStatsDisplay(level, xp, jumpCount, exercisesCompleted, progressToNextLevel);
+                    hideLoadingState();
+                });
+                return null;
+            });
+    }
+    
+    private void clearLocalCache() {
+        // Clear old local data to ensure we show fresh database data
         SharedPreferences prefs = getSharedPreferences("user_stats", MODE_PRIVATE);
-        
-        // Reset all stats to 0 for new users (temporary - remove this when backend is ready)
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.putInt("xp", 0);
-        editor.putInt("jump_count", 0);
-        editor.putInt("exercises_completed", 0);
-        editor.apply();
-        
-        // Get saved stats, defaulting to 0 if not found
-        int xp = prefs.getInt("xp", 0);
-        int jumpCount = prefs.getInt("jump_count", 0);
-        int exercisesCompleted = prefs.getInt("exercises_completed", 0);
-        
-        // Calculate level (starting at level 0, level up every 100 XP)
-        int level = xp / 100;  // Level 0 at 0-99 XP, Level 1 at 100-199 XP, etc.
-        int progressToNextLevel = xp % 100;  // XP progress within current level
-        
-        // Set values directly to ensure they show up
+        prefs.edit().clear().apply();
+        android.util.Log.d("StatsActivity", "Local cache cleared");
+    }
+    
+    private void showLoadingState() {
+        // Show loading indicators
+        tvXpValue.setText("...");
+        tvJumpCountValue.setText("...");
+        tvExercisesCompletedValue.setText("...");
+        tvLevelValue.setText("...");
+        tvNextLevelProgress.setText("Loading...");
+    }
+    
+    private void hideLoadingState() {
+        // Loading complete - UI already updated with real data
+    }
+    
+    private void updateStatsDisplay(int level, int xp, int jumpCount, int exercisesCompleted, int progressToNextLevel) {
         tvXpValue.setText(String.valueOf(xp));
         tvJumpCountValue.setText(String.valueOf(jumpCount));
         tvExercisesCompletedValue.setText(String.valueOf(exercisesCompleted));
