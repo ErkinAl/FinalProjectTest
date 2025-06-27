@@ -36,8 +36,8 @@ public class ExercisesActivity extends AppCompatActivity {
         
         // Set click listener for the jump exercise card
         jumpExerciseCard.setOnClickListener(v -> {
-            // Launch the jump counter activity
-            Intent intent = new Intent(ExercisesActivity.this, MainActivity.class);
+            // Launch the tutorial activity first
+            Intent intent = new Intent(ExercisesActivity.this, TutorialActivity.class);
             startActivity(intent);
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         });

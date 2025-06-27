@@ -115,7 +115,7 @@ public class PoseOverlayView extends View {
         
         // Use mostly raw data for instant response with minimal smoothing only for very jittery points
         if (smoothedKeypoints.isEmpty() || smoothedKeypoints.size() != newKeypoints.size()) {
-            this.keypoints = new ArrayList<>(newKeypoints);
+        this.keypoints = new ArrayList<>(newKeypoints);
             this.smoothedKeypoints = new ArrayList<>(newKeypoints);
         } else {
             // Apply extremely minimal smoothing only to prevent jitter
@@ -276,7 +276,7 @@ public class PoseOverlayView extends View {
         }
         
         return validPoints > 0 ? (totalConfidence / validPoints) * (validPoints / 17f) : 0f;
-    }
+        }
     
     // New method to check if pose is centered
     public boolean isPoseCentered() {

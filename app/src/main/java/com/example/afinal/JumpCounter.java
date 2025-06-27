@@ -71,7 +71,7 @@ public class JumpCounter {
         // Get current Y positions
         float[] currentShoulderY = {leftShoulder[1], rightShoulder[1]};
         float[] currentHipY = {leftHip[1], rightHip[1]};
-        
+            
         // Skip first frame (need previous frame for comparison)
         if (!hasValidPrevFrame) {
             prevShoulderY[0] = currentShoulderY[0];
@@ -195,7 +195,7 @@ public class JumpCounter {
             recentMovements[i] = 0f;
         }
     }
-
+    
     /**
      * Reset the jump counter to zero
      */

@@ -116,10 +116,10 @@ public class StatsActivity extends AppCompatActivity {
             .thenAccept(stats -> {
                 runOnUiThread(() -> {
                     android.util.Log.d("StatsActivity", "API Response - Level: " + stats.level + ", XP: " + stats.xp + ", Jumps: " + stats.totalJumps);
-                    
+        
                     // Update UI with fresh database data
                     updateStatsDisplay(stats.level, stats.xp, stats.totalJumps, stats.exercisesCompleted, stats.currentLevelXp);
-                    
+        
                     // Update local storage with latest database data
                     SharedPreferences prefs = getSharedPreferences("user_stats", MODE_PRIVATE);
                     prefs.edit()
@@ -130,7 +130,7 @@ public class StatsActivity extends AppCompatActivity {
                         .apply();
                     
                     hideLoadingState();
-                });
+            });
             })
             .exceptionally(throwable -> {
                 // API call failed - check the specific error
@@ -193,7 +193,7 @@ public class StatsActivity extends AppCompatActivity {
         // Set progress bar and text
         pbNextLevel.setProgress(progressToNextLevel);
         tvNextLevelProgress.setText(progressToNextLevel + "/100");
-    }
+        }
     
 
 } 

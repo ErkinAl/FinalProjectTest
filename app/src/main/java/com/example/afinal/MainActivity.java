@@ -466,16 +466,16 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                     android.widget.Toast.makeText(this, "⚠️ Database update failed - check connection", android.widget.Toast.LENGTH_LONG).show();
                     
                     // Update local stats as fallback
-                    int currentXp = userStats.getInt("xp", 0);
+        int currentXp = userStats.getInt("xp", 0);
                     int currentJumps = userStats.getInt("jump_count", 0);
-                    int exercisesCompleted = userStats.getInt("exercises_completed", 0);
-                    
-                    userStats.edit()
-                        .putInt("xp", currentXp + XP_REWARD)
+        int exercisesCompleted = userStats.getInt("exercises_completed", 0);
+        
+        userStats.edit()
+            .putInt("xp", currentXp + XP_REWARD)
                         .putInt("jump_count", currentJumps + JUMPS_TO_COMPLETE)
-                        .putInt("exercises_completed", exercisesCompleted + 1)
-                        .apply();
-                    
+            .putInt("exercises_completed", exercisesCompleted + 1)
+            .apply();
+        
                     showCongratulationsScreen();
                 });
                 return null;
@@ -587,36 +587,36 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
 
     private void initModel() {
         inferenceExecutor.execute(() -> {
-            try {
-                env = OrtEnvironment.getEnvironment();
-                OrtSession.SessionOptions options = new OrtSession.SessionOptions();
-                
+        try {
+            env = OrtEnvironment.getEnvironment();
+            OrtSession.SessionOptions options = new OrtSession.SessionOptions();
+            
                 // Enable optimization for mobile with better memory management
-                options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
+            options.setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT);
                 options.setIntraOpNumThreads(2);
                 options.setMemoryPatternOptimization(true);
                 options.setCPUArenaAllocator(false); // Reduce memory usage
-                
-                byte[] modelBytes = loadModelFile();
-                if (modelBytes == null || modelBytes.length == 0) {
-                    throw new IOException("Model file is empty or not found");
-                }
-                
+            
+            byte[] modelBytes = loadModelFile();
+            if (modelBytes == null || modelBytes.length == 0) {
+                throw new IOException("Model file is empty or not found");
+            }
+            
                 synchronized (sessionLock) {
-                    session = env.createSession(modelBytes, options);
+            session = env.createSession(modelBytes, options);
                 }
                 
-                Log.i("PoseTracker", "Model loaded successfully");
+            Log.i("PoseTracker", "Model loaded successfully");
                 modelReady = true;
                 checkIfReadyToStart();
                 
-            } catch (Exception e) {
-                Log.e("PoseTracker", "Model init failed: " + e.getMessage(), e);
-                runOnUiThread(() -> {
-                    Toast.makeText(this, "Failed to load model: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                    finish();
-                });
-            }
+        } catch (Exception e) {
+            Log.e("PoseTracker", "Model init failed: " + e.getMessage(), e);
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Failed to load model: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                finish();
+            });
+        }
         });
     }
 
@@ -708,7 +708,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         }
 
         // Remove rate limiting for immediate landmark display
-        // Process every frame for maximum responsiveness
+            // Process every frame for maximum responsiveness
         long currentTime = System.currentTimeMillis();
         lastInferenceTime = currentTime;
 
@@ -721,62 +721,62 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                     }
 
                     // Process with better error handling
-                    float[] inputData = preprocessImage(imageProxy);
-                    if (inputData == null) {
-                        return;
-                    }
-                    
+            float[] inputData = preprocessImage(imageProxy);
+            if (inputData == null) {
+                return;
+            }
+            
                     OnnxTensor inputTensor = null;
-                    OrtSession.Result result = null;
-                    
-                    try {
+            OrtSession.Result result = null;
+            
+            try {
                         inputTensor = OnnxTensor.createTensor(env, FloatBuffer.wrap(inputData), 
                                 new long[]{1, 3, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE});
                         
                         // Run inference with timeout protection
-                        result = session.run(java.util.Collections.singletonMap("images", inputTensor));
-                        float[][][] output = (float[][][]) result.get(0).getValue();
-                        
+                result = session.run(java.util.Collections.singletonMap("images", inputTensor));
+                float[][][] output = (float[][][]) result.get(0).getValue();
+                
                         // Parse keypoints with improved accuracy
-                        List<float[]> keypoints = parseKeypoints(output, imageProxy.getWidth(), imageProxy.getHeight());
+                List<float[]> keypoints = parseKeypoints(output, imageProxy.getWidth(), imageProxy.getHeight());
                         
                         // Update UI on main thread
                         runOnUiThread(() -> {
                             if (!isDestroyed) {
                                 // ALWAYS show landmarks - no conditions, no cooldown blocking
-                                poseOverlay.setKeypoints(keypoints);
-                                
+                poseOverlay.setKeypoints(keypoints);
+                
                                 // Only process keypoints for jump detection AFTER exercise starts (not during countdown)
                                 if (keypoints.size() >= 17 && exerciseStarted) {
-                                    jumpCounter.processKeypoints(keypoints);
-                                }
+                    jumpCounter.processKeypoints(keypoints);
+                }
                             }
                         });
                         
-                    } finally {
+            } finally {
                         // Clean up resources
-                        if (inputTensor != null) {
+                if (inputTensor != null) {
                             try {
-                                inputTensor.close();
+                    inputTensor.close();
                             } catch (Exception e) {
                                 Log.e("PoseTracker", "Error closing input tensor", e);
                             }
-                        }
-                        if (result != null) {
+                }
+                if (result != null) {
                             try {
-                                result.close();
+                    result.close();
                             } catch (Exception e) {
                                 Log.e("PoseTracker", "Error closing result", e);
                             }
                         }
-                    }
                 }
-            } catch (Exception e) {
-                Log.e("PoseTracker", "Error in image processing", e);
-            } finally {
-                isProcessing.set(false);
-                imageProxy.close();
             }
+        } catch (Exception e) {
+            Log.e("PoseTracker", "Error in image processing", e);
+        } finally {
+                isProcessing.set(false);
+            imageProxy.close();
+        }
         });
     }
     
@@ -997,7 +997,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                             env.close();
                             env = null;
                         }
-                    } catch (OrtException e) {
+        } catch (OrtException e) {
                         Log.e("PoseTracker", "Error closing ONNX resources", e);
                     }
                 }

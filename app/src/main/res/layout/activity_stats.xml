@@ -82,12 +82,12 @@
                             android:textStyle="bold"
                             android:fontFamily="casual" />
 
-                        <TextView
-                            android:id="@+id/tvLevelValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                    <TextView
+                        android:id="@+id/tvLevelValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
                             android:text="0"
-                            android:textColor="#FFD700"
+                        android:textColor="#FFD700"
                             android:textSize="48sp"
                             android:textStyle="bold"
                             android:fontFamily="casual" />
@@ -123,8 +123,8 @@
                             android:text="0"
                             android:textColor="#FFFFFF"
                             android:textSize="28sp"
-                            android:textStyle="bold"
-                            android:fontFamily="casual" />
+                        android:textStyle="bold"
+                        android:fontFamily="casual" />
                     </LinearLayout>
 
                     <!-- Progress to Next Level -->
@@ -178,54 +178,54 @@
                 android:fontFamily="casual" />
 
             <!-- Exercises Completed Card -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@android:color/transparent"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
-
-                <LinearLayout
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:background="@drawable/child_card_background">
+                    android:layout_marginBottom="16dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp">
 
-                    <ImageView
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:background="@drawable/child_card_background">
+
+                        <ImageView
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:contentDescription="@string/exercises_completed"
                         android:src="@drawable/child_trophy_icon" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginStart="16dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                             android:text="@string/exercises_completed"
-                            android:textColor="#FFFFFF"
+                                android:textColor="#FFFFFF"
                             android:textSize="18sp"
-                            android:fontFamily="casual" />
+                                android:fontFamily="casual" />
 
-                        <TextView
+                            <TextView
                             android:id="@+id/tvExercisesCompletedValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textColor="#FFFFFF"
-                            android:textSize="28sp"
-                            android:textStyle="bold"
-                            android:fontFamily="casual" />
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="#FFFFFF"
+                                android:textSize="28sp"
+                                android:textStyle="bold"
+                                android:fontFamily="casual" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
             <!-- Exercise Stats Section -->
             <TextView
@@ -240,51 +240,51 @@
                 android:fontFamily="casual" />
 
             <!-- Jump Counter Stats -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@android:color/transparent"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="4dp">
-
-                <LinearLayout
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:background="@drawable/child_card_background">
-
-                    <ImageView
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:contentDescription="@string/jump_counter_stats"
-                        android:src="@drawable/child_jump_icon" />
+                    android:layout_marginBottom="16dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="4dp">
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginStart="16dp"
-                        android:orientation="vertical">
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:background="@drawable/child_card_background">
 
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:contentDescription="@string/jump_counter_stats"
+                            android:src="@drawable/child_jump_icon" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                             android:text="@string/jump_counter_stats"
-                            android:textColor="#FFFFFF"
+                                android:textColor="#FFFFFF"
                             android:textSize="18sp"
-                            android:fontFamily="casual" />
+                                android:fontFamily="casual" />
 
-                        <TextView
-                            android:id="@+id/tvJumpCountValue"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="0"
-                            android:textColor="#FFFFFF"
-                            android:textSize="28sp"
-                            android:textStyle="bold"
-                            android:fontFamily="casual" />
+                            <TextView
+                                android:id="@+id/tvJumpCountValue"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="#FFFFFF"
+                                android:textSize="28sp"
+                                android:textStyle="bold"
+                                android:fontFamily="casual" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -293,60 +293,60 @@
                             android:textColor="#CCFFFFFF"
                             android:textSize="14sp"
                             android:fontFamily="casual" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
             <!-- Coming Soon Exercises -->
-            <androidx.cardview.widget.CardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@android:color/transparent"
-                app:cardCornerRadius="16dp"
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    app:cardBackgroundColor="@android:color/transparent"
+                    app:cardCornerRadius="16dp"
                 app:cardElevation="4dp"
                 android:alpha="0.6">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:padding="16dp"
-                    android:background="@drawable/child_card_background">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:padding="16dp"
+                        android:background="@drawable/child_card_background">
 
-                    <ImageView
+                        <ImageView
                         android:layout_width="48dp"
                         android:layout_height="48dp"
                         android:contentDescription="@string/more_exercises"
                         android:src="@drawable/ic_play_small"
                         android:alpha="0.5" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:layout_marginStart="16dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="wrap_content"
+                        <LinearLayout
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_gravity="center_vertical"
+                            android:layout_marginStart="16dp"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                             android:text="@string/more_exercises"
                             android:textColor="#CCFFFFFF"
                             android:textSize="18sp"
-                            android:fontFamily="casual" />
+                                android:fontFamily="casual" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
                             android:text="@string/coming_soon"
                             android:textColor="#99FFFFFF"
                             android:textSize="14sp"
                             android:fontFamily="casual"
                             android:textStyle="italic" />
+                        </LinearLayout>
                     </LinearLayout>
-                </LinearLayout>
-            </androidx.cardview.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
         </LinearLayout>
     </ScrollView>

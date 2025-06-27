@@ -63,5 +63,8 @@ dependencies {
     implementation("io.github.jan-tennert.supabase:gotrue-kt:2.6.0")
     implementation("io.ktor:ktor-client-android:2.3.12")
 
+    // Glide for GIF loading
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
 
 }
