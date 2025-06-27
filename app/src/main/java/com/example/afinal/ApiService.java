@@ -24,7 +24,7 @@ public class ApiService {
     private static String getApiBaseUrl() {
         // Use Azure-deployed API for production
         // Replace with your actual Azure URL after deployment
-        return "https://your-app-name.azurewebsites.net/api";
+        return "https://muvtime-api-erkinalkan-fmctdaeygrasavfd.polandcentral-01.azurewebsites.net/api";
         
         // Uncomment below for local development
         /*

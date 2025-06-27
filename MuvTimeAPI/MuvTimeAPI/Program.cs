@@ -43,13 +43,15 @@ builder.Services.AddCors(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
+// Enable Swagger in production for Azure (for testing)
+app.UseSwagger();
+app.UseSwaggerUI();
+
+// Don't force HTTPS redirect in Azure (causes issues)
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseHttpsRedirection();
 }
-
-app.UseHttpsRedirection();
 
 app.UseCors("AllowAndroid");
 

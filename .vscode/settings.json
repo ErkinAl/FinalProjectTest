@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/7b9cbe78-941a-4de3-b313-ae90a150eb10/resourceGroups/finalProject/providers/Microsoft.Web/sites/muvtime-api-erkinalkan",
+    "appService.deploySubpath": "MuvTimeAPI"
+}

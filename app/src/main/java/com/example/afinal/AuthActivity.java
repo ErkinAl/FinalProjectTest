@@ -350,7 +350,7 @@ public class AuthActivity extends AppCompatActivity {
     private static String getApiBaseUrl() {
         // Use Azure-deployed API for production
         // Replace with your actual Azure URL after deployment
-        return "https://your-app-name.azurewebsites.net/api";
+        return "https://muvtime-api-erkinalkan-fmctdaeygrasavfd.polandcentral-01.azurewebsites.net/api";
         
         // Uncomment below for local development
         /*
@@ -398,11 +398,17 @@ public class AuthActivity extends AppCompatActivity {
                         .addHeader("Content-Type", "application/json")
                         .build();
                     
+                    Log.d("AuthActivity", "Calling initialize API: " + apiUrl);
+                    Log.d("AuthActivity", "User ID: " + userId);
+                    Log.d("AuthActivity", "Display Name: " + displayName);
+                    
                     try (Response response = httpClient.newCall(request).execute()) {
                         if (response.isSuccessful()) {
-                            Log.d("AuthActivity", "User stats initialized successfully");
+                            String responseBody = response.body() != null ? response.body().string() : "No body";
+                            Log.d("AuthActivity", "User stats initialized successfully: " + responseBody);
                         } else {
-                            Log.w("AuthActivity", "Failed to initialize user stats: " + response.code());
+                            String errorBody = response.body() != null ? response.body().string() : "No error body";
+                            Log.w("AuthActivity", "Failed to initialize user stats: " + response.code() + " - " + errorBody);
                         }
                     }
                 }
