@@ -31,10 +31,14 @@ public class ExercisesActivity extends AppCompatActivity {
         // Find the exercise cards
         CardView jumpExerciseCard = findViewById(R.id.jumpExerciseCard);
         CardView armCirclesExerciseCard = findViewById(R.id.armCirclesExerciseCard);
+        CardView highKneesExerciseCard = findViewById(R.id.highKneesExerciseCard);
+        CardView sideReachExerciseCard = findViewById(R.id.sideReachExerciseCard);
         
         // Apply floating animation for a more playful look
         jumpExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
         armCirclesExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
+        highKneesExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
+        sideReachExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
         
         // Set click listener for the jump exercise card
         jumpExerciseCard.setOnClickListener(v -> {
@@ -49,6 +53,22 @@ public class ExercisesActivity extends AppCompatActivity {
         armCirclesExerciseCard.setOnClickListener(v -> {
             // Launch the tutorial activity for arm circles
             Intent intent = new Intent(ExercisesActivity.this, ArmCirclesTutorialActivity.class);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        });
+        
+        // Set click listener for the high knees exercise card
+        highKneesExerciseCard.setOnClickListener(v -> {
+            // Launch the tutorial activity for high knees
+            Intent intent = new Intent(ExercisesActivity.this, HighKneesTutorialActivity.class);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        });
+        
+        // Set click listener for the side reach exercise card
+        sideReachExerciseCard.setOnClickListener(v -> {
+            // Launch the tutorial activity for side reach
+            Intent intent = new Intent(ExercisesActivity.this, SideReachTutorialActivity.class);
             startActivity(intent);
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         });

@@ -46,6 +46,14 @@
             android:exported="false"
             android:theme="@style/Theme.Final.Fullscreen" />
         <activity
+            android:name=".HighKneesTutorialActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Final.Fullscreen" />
+        <activity
+            android:name=".SideReachTutorialActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Final.Fullscreen" />
+        <activity
             android:name=".MainActivity"
             android:exported="false" />
         <activity

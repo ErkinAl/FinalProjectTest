@@ -216,6 +216,180 @@
                 </RelativeLayout>
             </androidx.cardview.widget.CardView>
 
+            <!-- High Knees Exercise Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/highKneesExerciseCard"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/child_card_background">
+
+                    <!-- Exercise Image -->
+                    <ImageView
+                        android:id="@+id/highKneesExerciseImage"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="16dp"
+                        android:background="@drawable/exercise_image_background"
+                        android:contentDescription="High Knees Exercise Image"
+                        android:padding="16dp"
+                        android:src="@drawable/ic_high_knees" />
+
+                    <!-- Exercise Details -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_toEndOf="@id/highKneesExerciseImage"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="High Knees"
+                                android:textColor="#FFFFFF"
+                                android:textSize="26sp"
+                                android:textStyle="bold"
+                                android:fontFamily="casual" />
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginStart="8dp"
+                                android:src="@drawable/star_badge"/>
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/high_knees_exercise_description"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp"
+                            android:fontFamily="casual" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:drawablePadding="8dp"
+                            android:fontFamily="casual"
+                            android:gravity="center_vertical"
+                            android:text="Tap to Start"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            app:drawableStartCompat="@drawable/ic_play_small" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Side Reach Exercise Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/sideReachExerciseCard"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_marginBottom="16dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?android:attr/selectableItemBackground"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="8dp">
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/child_card_background">
+
+                    <!-- Exercise Image -->
+                    <ImageView
+                        android:id="@+id/sideReachExerciseImage"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="16dp"
+                        android:background="@drawable/exercise_image_background"
+                        android:contentDescription="Side Reach Exercise Image"
+                        android:padding="16dp"
+                        android:src="@drawable/ic_side_reach" />
+
+                    <!-- Exercise Details -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_centerVertical="true"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_toEndOf="@id/sideReachExerciseImage"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Side Reach"
+                                android:textColor="#FFFFFF"
+                                android:textSize="26sp"
+                                android:textStyle="bold"
+                                android:fontFamily="casual" />
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginStart="8dp"
+                                android:src="@drawable/star_badge"/>
+                        </LinearLayout>
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="@string/side_reach_exercise_description"
+                            android:textColor="#FFFFFF"
+                            android:textSize="16sp"
+                            android:fontFamily="casual" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:drawablePadding="8dp"
+                            android:fontFamily="casual"
+                            android:gravity="center_vertical"
+                            android:text="Tap to Start"
+                            android:textColor="#FFFFFF"
+                            android:textSize="18sp"
+                            android:textStyle="bold"
+                            app:drawableStartCompat="@drawable/ic_play_small" />
+                    </LinearLayout>
+                </RelativeLayout>
+            </androidx.cardview.widget.CardView>
+
             <!-- More exercise cards will go here in the future -->
             
         </LinearLayout>

@@ -53,7 +53,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MainActivity extends AppCompatActivity implements JumpCounter.JumpListener, ArmCircleCounter.ArmCircleListener {
+public class MainActivity extends AppCompatActivity implements JumpCounter.JumpListener, ArmCircleCounter.ArmCircleListener, HighKneeCounter.HighKneeListener, SideReachCounter.SideReachListener {
     private PreviewView previewView;
     private PoseOverlayView poseOverlay;
     private TextView jumpCountText;
@@ -75,6 +75,8 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private ExecutorService inferenceExecutor;
     private JumpCounter jumpCounter;
     private ArmCircleCounter armCircleCounter;
+    private HighKneeCounter highKneeCounter;
+    private SideReachCounter sideReachCounter;
     private Handler mainHandler;
     
     // Thread safety
@@ -99,8 +101,26 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private boolean exerciseCompleted = false;
     private static final int JUMPS_TO_COMPLETE = 20;
     private static final int ARM_CIRCLES_TO_COMPLETE = 20;
-    private static final int XP_REWARD = 20;
+    private static final int HIGH_KNEES_TO_COMPLETE = 30; // More reps for high knees (rapid movement)
+    private static final int SIDE_REACHES_TO_COMPLETE = 20; // Side reach exercise
+    private static final int JUMP_XP_REWARD = 20;
+    private static final int ARM_CIRCLES_XP_REWARD = 20;
+    private static final int HIGH_KNEES_XP_REWARD = 30;
+    private static final int SIDE_REACHES_XP_REWARD = 25;
     private int remainingJumps = 20; // Countdown from 20 to 0
+    
+    // Helper method to get XP reward based on exercise type
+    private int getCurrentXPReward() {
+        if ("arm_circles".equals(exerciseType)) {
+            return ARM_CIRCLES_XP_REWARD;
+        } else if ("high_knees".equals(exerciseType)) {
+            return HIGH_KNEES_XP_REWARD;
+        } else if ("side_reach".equals(exerciseType)) {
+            return SIDE_REACHES_XP_REWARD;
+        } else {
+            return JUMP_XP_REWARD;
+        }
+    }
     
     // Exercise type management
     private String exerciseType = "jump"; // Default to jump exercise
@@ -138,6 +158,10 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             // Set appropriate rep count based on exercise type
             if ("arm_circles".equals(exerciseType)) {
                 remainingReps = ARM_CIRCLES_TO_COMPLETE;
+            } else if ("high_knees".equals(exerciseType)) {
+                remainingReps = HIGH_KNEES_TO_COMPLETE;
+            } else if ("side_reach".equals(exerciseType)) {
+                remainingReps = SIDE_REACHES_TO_COMPLETE;
             } else {
                 remainingReps = JUMPS_TO_COMPLETE;
             }
@@ -166,6 +190,10 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             jumpCounter = new JumpCounter(this);
             // Initialize arm circle counter with this as the listener
             armCircleCounter = new ArmCircleCounter(this);
+            // Initialize high knee counter with this as the listener
+            highKneeCounter = new HighKneeCounter(this);
+            // Initialize side reach counter with this as the listener
+            sideReachCounter = new SideReachCounter(this);
             updateCounterText();
             
 
@@ -405,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         }
         
         runOnUiThread(() -> {
-            remainingReps = JUMPS_TO_COMPLETE - jumpCount;
+                remainingReps = JUMPS_TO_COMPLETE - jumpCount;
             updateCounterText();
             
             // Play cool jump animation
@@ -457,6 +485,10 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private void updateCounterText() {
         if ("arm_circles".equals(exerciseType)) {
             jumpCountText.setText("Arm Circles: " + remainingReps);
+        } else if ("high_knees".equals(exerciseType)) {
+            jumpCountText.setText("High Knees: " + remainingReps);
+        } else if ("side_reach".equals(exerciseType)) {
+            jumpCountText.setText("Side Reaches: " + remainingReps);
         } else {
             jumpCountText.setText("Jumps: " + remainingReps);
         }
@@ -489,7 +521,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         // Calculate session duration (in seconds)
         long sessionDuration = (System.currentTimeMillis() - exerciseStartTime) / 1000;
         
-        android.util.Log.d("MainActivity", "Sending to API - User: " + userId + ", Jumps: " + JUMPS_TO_COMPLETE + ", XP: " + XP_REWARD + ", Duration: " + sessionDuration + "s");
+        android.util.Log.d("MainActivity", "Sending to API - User: " + userId + ", Jumps: " + JUMPS_TO_COMPLETE + ", XP: " + getCurrentXPReward() + ", Duration: " + sessionDuration + "s");
         
         // Check if user ID is valid
         if (userId == null || userId.isEmpty()) {
@@ -501,7 +533,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         // Add timeout to API call and detailed logging
         android.util.Log.d("MainActivity", "🔄 Starting API call to update database...");
         
-        apiService.updateUserStats(userId, JUMPS_TO_COMPLETE, XP_REWARD, (int) sessionDuration)
+        apiService.updateUserStats(userId, JUMPS_TO_COMPLETE, getCurrentXPReward(), (int) sessionDuration)
             .thenAccept(updatedStats -> {
                 // Database update successful!
                 runOnUiThread(() -> {
@@ -534,7 +566,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         int exercisesCompleted = userStats.getInt("exercises_completed", 0);
         
         userStats.edit()
-            .putInt("xp", currentXp + XP_REWARD)
+                                .putInt("xp", currentXp + getCurrentXPReward())
                         .putInt("jump_count", currentJumps + JUMPS_TO_COMPLETE)
             .putInt("exercises_completed", exercisesCompleted + 1)
             .apply();
@@ -553,7 +585,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             xpEarnedText.setVisibility(View.VISIBLE);
             
             // Update XP text with actual earned amount
-            xpEarnedText.setText("+" + XP_REWARD + " XP EARNED!");
+            xpEarnedText.setText("+" + getCurrentXPReward() + " XP EARNED!");
             
             // Make XP text tappable to proceed
             xpEarnedText.setOnClickListener(v -> {
@@ -814,10 +846,14 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                                     // Use appropriate counter based on exercise type
                                     if ("arm_circles".equals(exerciseType)) {
                                         armCircleCounter.processKeypoints(keypoints);
+                                    } else if ("high_knees".equals(exerciseType)) {
+                                        highKneeCounter.processKeypoints(keypoints);
+                                    } else if ("side_reach".equals(exerciseType)) {
+                                        sideReachCounter.processKeypoints(keypoints);
                                     } else {
-                                        jumpCounter.processKeypoints(keypoints);
+                    jumpCounter.processKeypoints(keypoints);
                                     }
-                                }
+                }
                             }
                         });
                         
@@ -1103,6 +1139,62 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         if (jumpCounter != null) {
             // Don't reset the counter, just ensure it's ready
             Log.d("PoseTracker", "Activity resumed, current jumps: " + jumpCounter.getJumpCount());
+        }
+    }
+
+    @Override
+    public void onHighKneeDetected(int highKneeCount) {
+        // Only process high knee detection if we're doing high knee exercises
+        if (!"high_knees".equals(exerciseType)) {
+            return;
+        }
+        
+        runOnUiThread(() -> {
+            remainingReps = HIGH_KNEES_TO_COMPLETE - highKneeCount;
+            updateCounterText();
+            
+            // Play animation (can reuse jump animation or create specific high knee animation)
+            playJumpAnimation();
+            
+            // Start cooldown immediately after high knee
+            showCooldown();
+        });
+        
+        // Track high knees in stats (reuse jump stats for now)
+        updateJumpStats(highKneeCount);
+        
+        // Check if exercise is completed (when countdown reaches 0)
+        if (!exerciseCompleted && remainingReps <= 0) {
+            exerciseCompleted = true;
+            completeExercise();
+        }
+    }
+
+    @Override
+    public void onSideReachDetected(int sideReachCount) {
+        // Only process side reach detection if we're doing side reach exercises
+        if (!"side_reach".equals(exerciseType)) {
+            return;
+        }
+        
+        runOnUiThread(() -> {
+            remainingReps = SIDE_REACHES_TO_COMPLETE - sideReachCount;
+            updateCounterText();
+            
+            // Play animation (can reuse jump animation or create specific side reach animation)
+            playJumpAnimation();
+            
+            // Start cooldown immediately after side reach
+            showCooldown();
+        });
+        
+        // Track side reaches in stats (reuse jump stats for now)
+        updateJumpStats(sideReachCount);
+        
+        // Check if exercise is completed (when countdown reaches 0)
+        if (!exerciseCompleted && remainingReps <= 0) {
+            exerciseCompleted = true;
+            completeExercise();
         }
     }
 }
