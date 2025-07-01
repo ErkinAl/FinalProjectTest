@@ -10,6 +10,9 @@
     <string name="arm_circles_exercise_description">Make big circles with your arms! Let\'s get moving!</string>
     <string name="high_knees_exercise_description">Lift your knees up high! March like a champion!</string>
     <string name="side_reach_exercise_description">Reach to each side and stretch! Feel the amazing stretch!</string>
+    <string name="jack_jumps_exercise_description">Jump and make a star! Spread your arms and legs wide!</string>
+    <string name="biceps_curl_exercise_description">Curl your arms up towards your shoulders!</string>
+    <string name="shoulder_press_exercise_description">Press your arms straight up above your head!</string>
     <string name="tap_to_start">Tap to start the fun!</string>
     <string name="jump_exercise_image">Jump exercise image</string>
     

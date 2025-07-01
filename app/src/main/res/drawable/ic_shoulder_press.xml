@@ -1,0 +1,52 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0">
+    
+    <!-- Head -->
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M12,4 C13.1,4 14,4.9 14,6 C14,7.1 13.1,8 12,8 C10.9,8 10,7.1 10,6 C10,4.9 10.9,4 12,4 Z" />
+    
+    <!-- Body -->
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M10,8.5 L14,8.5 L14,16 L10,16 Z" />
+    
+    <!-- Left arm pressed up -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M8,9 L10,9 L10,6 L8,6 Z" />
+    
+    <!-- Right arm pressed up -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M14,9 L16,9 L16,6 L14,6 Z" />
+    
+    <!-- Legs -->
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M10,16 L11,16 L11,20 L10,20 Z" />
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M13,16 L14,16 L14,20 L13,20 Z" />
+    
+    <!-- Left weight/dumbbell -->
+    <path
+        android:fillColor="#424242"
+        android:pathData="M8.5,5 C9.3,5 10,5.7 10,6.5 C10,7.3 9.3,8 8.5,8 C7.7,8 7,7.3 7,6.5 C7,5.7 7.7,5 8.5,5 Z" />
+    
+    <!-- Right weight/dumbbell -->
+    <path
+        android:fillColor="#424242"
+        android:pathData="M15.5,5 C16.3,5 17,5.7 17,6.5 C17,7.3 16.3,8 15.5,8 C14.7,8 14,7.3 14,6.5 C14,5.7 14.7,5 15.5,5 Z" />
+    
+    <!-- Motion lines to show pressing up -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M8,4 L8,3 M9,4 L9,3 M15,4 L15,3 M16,4 L16,3"
+        android:strokeWidth="0.5"
+        android:strokeColor="#4CAF50" />
+    
+</vector> 

@@ -13,7 +13,7 @@ public class JumpCounter {
     }
     
     // Smart jump detection constants with validation
-    private static final float MOVEMENT_THRESHOLD = 0.018f; // Balanced threshold to avoid false positives
+    private static final float MOVEMENT_THRESHOLD = 0.015f; // Balanced threshold to avoid false positives
     private static final float MIN_CONFIDENCE = 0.3f; // Higher confidence for reliable detection
     private static final long JUMP_COOLDOWN_MS = 1000; // 1 second cooldown between jumps
     private static final float MIN_JUMP_HEIGHT = 0.025f; // Minimum movement to qualify as jump

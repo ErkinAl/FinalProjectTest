@@ -1,0 +1,45 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0">
+    
+    <!-- Head -->
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M12,4 C13.1,4 14,4.9 14,6 C14,7.1 13.1,8 12,8 C10.9,8 10,7.1 10,6 C10,4.9 10.9,4 12,4 Z" />
+    
+    <!-- Body -->
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M10,8.5 L14,8.5 L14,16 L10,16 Z" />
+    
+    <!-- Left arm (straight down) -->
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M8,9 L10,9 L10,15 L8,15 Z" />
+    
+    <!-- Right arm (bent up - biceps curl) -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M14,9 L16,9 L16,11 L15,11 L15,10 L14,10 Z" />
+    
+    <!-- Right forearm (curled up) -->
+    <path
+        android:fillColor="#FFB74D"
+        android:pathData="M15,10 L16,10 L16,8 L15,8 Z" />
+    
+    <!-- Legs -->
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M10,16 L11,16 L11,20 L10,20 Z" />
+    <path
+        android:fillColor="#FF6B4A"
+        android:pathData="M13,16 L14,16 L14,20 L13,20 Z" />
+    
+    <!-- Weight/dumbbell in curled hand -->
+    <path
+        android:fillColor="#424242"
+        android:pathData="M15.5,7.5 C16.3,7.5 17,8.2 17,9 C17,9.8 16.3,10.5 15.5,10.5 C14.7,10.5 14,9.8 14,9 C14,8.2 14.7,7.5 15.5,7.5 Z" />
+    
+</vector> 

@@ -54,6 +54,18 @@
             android:exported="false"
             android:theme="@style/Theme.Final.Fullscreen" />
         <activity
+            android:name=".JackJumpsTutorialActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Final.Fullscreen" />
+        <activity
+            android:name=".BicepsCurlTutorialActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Final.Fullscreen" />
+        <activity
+            android:name=".ShoulderPressTutorialActivity"
+            android:exported="false"
+            android:theme="@style/Theme.Final.Fullscreen" />
+        <activity
             android:name=".MainActivity"
             android:exported="false" />
         <activity

@@ -53,7 +53,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MainActivity extends AppCompatActivity implements JumpCounter.JumpListener, ArmCircleCounter.ArmCircleListener, HighKneeCounter.HighKneeListener, SideReachCounter.SideReachListener {
+public class MainActivity extends AppCompatActivity implements JumpCounter.JumpListener, ArmCircleCounter.ArmCircleListener, HighKneeCounter.HighKneeListener, SideReachCounter.SideReachListener, JackJumpsCounter.JackJumpsListener, BicepsCurlCounter.BicepsCurlListener, ShoulderPressCounter.ShoulderPressListener {
     private PreviewView previewView;
     private PoseOverlayView poseOverlay;
     private TextView jumpCountText;
@@ -77,6 +77,9 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private ArmCircleCounter armCircleCounter;
     private HighKneeCounter highKneeCounter;
     private SideReachCounter sideReachCounter;
+    private JackJumpsCounter jackJumpsCounter;
+    private BicepsCurlCounter bicepsCurlCounter;
+    private ShoulderPressCounter shoulderPressCounter;
     private Handler mainHandler;
     
     // Thread safety
@@ -103,10 +106,16 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     private static final int ARM_CIRCLES_TO_COMPLETE = 20;
     private static final int HIGH_KNEES_TO_COMPLETE = 30; // More reps for high knees (rapid movement)
     private static final int SIDE_REACHES_TO_COMPLETE = 20; // Side reach exercise
+    private static final int JACK_JUMPS_TO_COMPLETE = 12; // Jack jumps exercise (star jumps)
+    private static final int BICEPS_CURL_TO_COMPLETE = 20; // Biceps curl exercise
+    private static final int SHOULDER_PRESS_TO_COMPLETE = 20; // Shoulder press exercise
     private static final int JUMP_XP_REWARD = 20;
     private static final int ARM_CIRCLES_XP_REWARD = 20;
     private static final int HIGH_KNEES_XP_REWARD = 30;
     private static final int SIDE_REACHES_XP_REWARD = 25;
+    private static final int JACK_JUMPS_XP_REWARD = 20;
+    private static final int BICEPS_CURL_XP_REWARD = 20;
+    private static final int SHOULDER_PRESS_XP_REWARD = 20;
     private int remainingJumps = 20; // Countdown from 20 to 0
     
     // Helper method to get XP reward based on exercise type
@@ -117,8 +126,33 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             return HIGH_KNEES_XP_REWARD;
         } else if ("side_reach".equals(exerciseType)) {
             return SIDE_REACHES_XP_REWARD;
+        } else if ("jack_jumps".equals(exerciseType)) {
+            return JACK_JUMPS_XP_REWARD;
+        } else if ("biceps_curl".equals(exerciseType)) {
+            return BICEPS_CURL_XP_REWARD;
+        } else if ("shoulder_press".equals(exerciseType)) {
+            return SHOULDER_PRESS_XP_REWARD;
         } else {
             return JUMP_XP_REWARD;
+        }
+    }
+    
+    // Helper method to get completion count based on exercise type
+    private int getCurrentCompletionCount() {
+        if ("arm_circles".equals(exerciseType)) {
+            return ARM_CIRCLES_TO_COMPLETE;
+        } else if ("high_knees".equals(exerciseType)) {
+            return HIGH_KNEES_TO_COMPLETE;
+        } else if ("side_reach".equals(exerciseType)) {
+            return SIDE_REACHES_TO_COMPLETE;
+        } else if ("jack_jumps".equals(exerciseType)) {
+            return JACK_JUMPS_TO_COMPLETE;
+        } else if ("biceps_curl".equals(exerciseType)) {
+            return BICEPS_CURL_TO_COMPLETE;
+        } else if ("shoulder_press".equals(exerciseType)) {
+            return SHOULDER_PRESS_TO_COMPLETE;
+        } else {
+            return JUMPS_TO_COMPLETE;
         }
     }
     
@@ -162,6 +196,12 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                 remainingReps = HIGH_KNEES_TO_COMPLETE;
             } else if ("side_reach".equals(exerciseType)) {
                 remainingReps = SIDE_REACHES_TO_COMPLETE;
+            } else if ("jack_jumps".equals(exerciseType)) {
+                remainingReps = JACK_JUMPS_TO_COMPLETE;
+            } else if ("biceps_curl".equals(exerciseType)) {
+                remainingReps = BICEPS_CURL_TO_COMPLETE;
+            } else if ("shoulder_press".equals(exerciseType)) {
+                remainingReps = SHOULDER_PRESS_TO_COMPLETE;
             } else {
                 remainingReps = JUMPS_TO_COMPLETE;
             }
@@ -194,6 +234,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             highKneeCounter = new HighKneeCounter(this);
             // Initialize side reach counter with this as the listener
             sideReachCounter = new SideReachCounter(this);
+            // Initialize jack jumps counter with this as the listener
+            jackJumpsCounter = new JackJumpsCounter(this);
+            // Initialize biceps curl counter with this as the listener
+            bicepsCurlCounter = new BicepsCurlCounter(this);
+            shoulderPressCounter = new ShoulderPressCounter(this);
             updateCounterText();
             
 
@@ -289,8 +334,8 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             // Reset the jump counter to start fresh
             jumpCounter.reset();
         armCircleCounter.reset();
-            // Reset remaining reps for countdown
-            remainingReps = ("arm_circles".equals(exerciseType)) ? ARM_CIRCLES_TO_COMPLETE : JUMPS_TO_COMPLETE;
+            // Reset remaining reps for countdown based on exercise type
+            remainingReps = getCurrentCompletionCount();
             updateCounterText();
         }
         
@@ -489,6 +534,12 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             jumpCountText.setText("High Knees: " + remainingReps);
         } else if ("side_reach".equals(exerciseType)) {
             jumpCountText.setText("Side Reaches: " + remainingReps);
+        } else if ("jack_jumps".equals(exerciseType)) {
+            jumpCountText.setText("Jack Jumps: " + remainingReps);
+        } else if ("biceps_curl".equals(exerciseType)) {
+            jumpCountText.setText("Biceps Curls: " + remainingReps);
+        } else if ("shoulder_press".equals(exerciseType)) {
+            jumpCountText.setText("Shoulder Presses: " + remainingReps);
         } else {
             jumpCountText.setText("Jumps: " + remainingReps);
         }
@@ -521,7 +572,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         // Calculate session duration (in seconds)
         long sessionDuration = (System.currentTimeMillis() - exerciseStartTime) / 1000;
         
-        android.util.Log.d("MainActivity", "Sending to API - User: " + userId + ", Jumps: " + JUMPS_TO_COMPLETE + ", XP: " + getCurrentXPReward() + ", Duration: " + sessionDuration + "s");
+        android.util.Log.d("MainActivity", "Sending to API - User: " + userId + ", Jumps: " + getCurrentCompletionCount() + ", XP: " + getCurrentXPReward() + ", Duration: " + sessionDuration + "s");
         
         // Check if user ID is valid
         if (userId == null || userId.isEmpty()) {
@@ -533,7 +584,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         // Add timeout to API call and detailed logging
         android.util.Log.d("MainActivity", "🔄 Starting API call to update database...");
         
-        apiService.updateUserStats(userId, JUMPS_TO_COMPLETE, getCurrentXPReward(), (int) sessionDuration)
+        apiService.updateUserStats(userId, getCurrentCompletionCount(), getCurrentXPReward(), (int) sessionDuration)
             .thenAccept(updatedStats -> {
                 // Database update successful!
                 runOnUiThread(() -> {
@@ -567,7 +618,7 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         
         userStats.edit()
                                 .putInt("xp", currentXp + getCurrentXPReward())
-                        .putInt("jump_count", currentJumps + JUMPS_TO_COMPLETE)
+                        .putInt("jump_count", currentJumps + getCurrentCompletionCount())
             .putInt("exercises_completed", exercisesCompleted + 1)
             .apply();
         
@@ -850,7 +901,13 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                                         highKneeCounter.processKeypoints(keypoints);
                                     } else if ("side_reach".equals(exerciseType)) {
                                         sideReachCounter.processKeypoints(keypoints);
-                                    } else {
+                                                        } else if ("jack_jumps".equals(exerciseType)) {
+                        jackJumpsCounter.processKeypoints(keypoints);
+                                } else if ("biceps_curl".equals(exerciseType)) {
+                bicepsCurlCounter.processKeypoints(keypoints);
+            } else if ("shoulder_press".equals(exerciseType)) {
+                shoulderPressCounter.processKeypoints(keypoints);
+            } else {
                     jumpCounter.processKeypoints(keypoints);
                                     }
                 }
@@ -1190,6 +1247,90 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         
         // Track side reaches in stats (reuse jump stats for now)
         updateJumpStats(sideReachCount);
+        
+        // Check if exercise is completed (when countdown reaches 0)
+        if (!exerciseCompleted && remainingReps <= 0) {
+            exerciseCompleted = true;
+            completeExercise();
+        }
+    }
+
+    @Override
+    public void onJackJumpDetected(int jackJumpCount) {
+        // Only process jack jump detection if we're doing jack jumps exercises
+        if (!"jack_jumps".equals(exerciseType)) {
+            return;
+        }
+        
+        runOnUiThread(() -> {
+            remainingReps = JACK_JUMPS_TO_COMPLETE - jackJumpCount;
+            updateCounterText();
+            
+            // Play animation (can reuse jump animation or create specific jack jump animation)
+            playJumpAnimation();
+            
+            // Start cooldown immediately after jack jump
+            showCooldown();
+        });
+        
+        // Track jack jumps in stats (reuse jump stats for now)
+        updateJumpStats(jackJumpCount);
+        
+        // Check if exercise is completed (when countdown reaches 0)
+        if (!exerciseCompleted && remainingReps <= 0) {
+            exerciseCompleted = true;
+            completeExercise();
+        }
+    }
+
+    @Override
+    public void onBicepsCurlDetected(int bicepsCurlCount) {
+        // Only process biceps curl detection if we're doing biceps curl exercises
+        if (!"biceps_curl".equals(exerciseType)) {
+            return;
+        }
+        
+        runOnUiThread(() -> {
+            remainingReps = BICEPS_CURL_TO_COMPLETE - bicepsCurlCount;
+            updateCounterText();
+            
+            // Play animation (can reuse jump animation or create specific biceps curl animation)
+            playJumpAnimation();
+            
+            // Start cooldown immediately after biceps curl
+            showCooldown();
+        });
+        
+        // Track biceps curls in stats (reuse jump stats for now)
+        updateJumpStats(bicepsCurlCount);
+        
+        // Check if exercise is completed (when countdown reaches 0)
+        if (!exerciseCompleted && remainingReps <= 0) {
+            exerciseCompleted = true;
+            completeExercise();
+        }
+    }
+
+    @Override
+    public void onShoulderPressDetected(int shoulderPressCount) {
+        // Only process shoulder press detection if we're doing shoulder press exercises
+        if (!"shoulder_press".equals(exerciseType)) {
+            return;
+        }
+        
+        runOnUiThread(() -> {
+            remainingReps = SHOULDER_PRESS_TO_COMPLETE - shoulderPressCount;
+            updateCounterText();
+            
+            // Play animation (can reuse jump animation or create specific shoulder press animation)
+            playJumpAnimation();
+            
+            // Start cooldown immediately after shoulder press
+            showCooldown();
+        });
+        
+        // Track shoulder presses in stats (reuse jump stats for now)
+        updateJumpStats(shoulderPressCount);
         
         // Check if exercise is completed (when countdown reaches 0)
         if (!exerciseCompleted && remainingReps <= 0) {
