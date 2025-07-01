@@ -36,6 +36,7 @@ public class ExercisesActivity extends AppCompatActivity {
         CardView jackJumpsExerciseCard = findViewById(R.id.jackJumpsExerciseCard);
         CardView bicepsCurlExerciseCard = findViewById(R.id.bicepsCurlExerciseCard);
         CardView shoulderPressExerciseCard = findViewById(R.id.shoulderPressExerciseCard);
+        CardView squatExerciseCard = findViewById(R.id.squatExerciseCard);
         
         // Apply floating animation for a more playful look
         jumpExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
@@ -45,6 +46,7 @@ public class ExercisesActivity extends AppCompatActivity {
         jackJumpsExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
         bicepsCurlExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
         shoulderPressExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
+        squatExerciseCard.startAnimation(AnimationUtils.loadAnimation(this, R.anim.floating));
         
         // Set click listener for the jump exercise card
         jumpExerciseCard.setOnClickListener(v -> {
@@ -99,6 +101,14 @@ public class ExercisesActivity extends AppCompatActivity {
         shoulderPressExerciseCard.setOnClickListener(v -> {
             // Launch the tutorial activity for shoulder press
             Intent intent = new Intent(ExercisesActivity.this, ShoulderPressTutorialActivity.class);
+            startActivity(intent);
+            overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
+        });
+        
+        // Set click listener for the squat exercise card
+        squatExerciseCard.setOnClickListener(v -> {
+            // Launch the tutorial activity for squats
+            Intent intent = new Intent(ExercisesActivity.this, SquatTutorialActivity.class);
             startActivity(intent);
             overridePendingTransition(R.anim.fade_in, R.anim.fade_out);
         });

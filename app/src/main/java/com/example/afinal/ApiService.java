@@ -173,7 +173,7 @@ public class ApiService {
     // Get user ID from authenticated session
     public static String getUserId(Context context) {
         String userId = AuthActivity.getCurrentUserId(context);
-        if (userId == null || userId.isEmpty()) {
+        if (userId == null || userId.isEmpty()) { // for test
             // Fallback for testing - in production, this should never happen
             return "550e8400-e29b-41d4-a716-446655440000";
         }
