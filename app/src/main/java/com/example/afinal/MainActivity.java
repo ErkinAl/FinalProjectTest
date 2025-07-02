@@ -507,6 +507,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             return;
         }
         
+        // Don't process if exercise is already completed
+        if (exerciseCompleted) {
+            return;
+        }
+        
         runOnUiThread(() -> {
                 remainingReps = JUMPS_TO_COMPLETE - jumpCount;
             updateCounterText();
@@ -533,6 +538,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     public void onArmCircleDetected(int armCircleCount) {
         // Only process arm circle detection if we're doing arm circle exercises
         if (!"arm_circles".equals(exerciseType)) {
+            return;
+        }
+        
+        // Don't process if exercise is already completed
+        if (exerciseCompleted) {
             return;
         }
         
@@ -1246,6 +1256,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             return;
         }
         
+        // Don't process if exercise is already completed
+        if (exerciseCompleted) {
+            return;
+        }
+        
         runOnUiThread(() -> {
             remainingReps = HIGH_KNEES_TO_COMPLETE - highKneeCount;
             updateCounterText();
@@ -1271,6 +1286,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     public void onSideReachDetected(int sideReachCount) {
         // Only process side reach detection if we're doing side reach exercises
         if (!"side_reach".equals(exerciseType)) {
+            return;
+        }
+        
+        // Don't process if exercise is already completed
+        if (exerciseCompleted) {
             return;
         }
         
@@ -1302,6 +1322,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             return;
         }
         
+        // Don't process if exercise is already completed
+        if (exerciseCompleted) {
+            return;
+        }
+        
         runOnUiThread(() -> {
             remainingReps = JACK_JUMPS_TO_COMPLETE - jackJumpCount;
             updateCounterText();
@@ -1327,6 +1352,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     public void onBicepsCurlDetected(int bicepsCurlCount) {
         // Only process biceps curl detection if we're doing biceps curl exercises
         if (!"biceps_curl".equals(exerciseType)) {
+            return;
+        }
+        
+        // Don't process if exercise is already completed
+        if (exerciseCompleted) {
             return;
         }
         
@@ -1358,6 +1388,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
             return;
         }
         
+        // Don't process if exercise is already completed
+        if (exerciseCompleted) {
+            return;
+        }
+        
         runOnUiThread(() -> {
             remainingReps = SHOULDER_PRESS_TO_COMPLETE - shoulderPressCount;
             updateCounterText();
@@ -1383,6 +1418,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
     public void onSquatDetected(int squatCount) {
         // Only process squat detection if we're doing squat exercises
         if (!"squat".equals(exerciseType)) {
+            return;
+        }
+        
+        // Don't process if exercise is already completed
+        if (exerciseCompleted) {
             return;
         }
         
