@@ -15,8 +15,8 @@ public class ExerciseSession : BaseModel
     [Column("exercise_type")]
     public string ExerciseType { get; set; } = "jump_counter";
 
-    [Column("jumps_completed")]
-    public int JumpsCompleted { get; set; } = 0;
+    [Column("reps_completed")]
+    public int RepsCompleted { get; set; } = 0;
 
     [Column("xp_earned")]
     public int XpEarned { get; set; } = 0;

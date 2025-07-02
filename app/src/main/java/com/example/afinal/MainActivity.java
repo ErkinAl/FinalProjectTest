@@ -142,6 +142,26 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         }
     }
     
+    private String getExerciseCountKey(String exerciseType) {
+        if ("arm_circles".equals(exerciseType)) {
+            return "arm_circles_count";
+        } else if ("high_knees".equals(exerciseType)) {
+            return "high_knees_count";
+        } else if ("side_reach".equals(exerciseType)) {
+            return "side_reaches_count";
+        } else if ("jack_jumps".equals(exerciseType)) {
+            return "jack_jumps_count";
+        } else if ("biceps_curl".equals(exerciseType)) {
+            return "biceps_curls_count";
+        } else if ("shoulder_press".equals(exerciseType)) {
+            return "shoulder_presses_count";
+        } else if ("squat".equals(exerciseType)) {
+            return "squats_count";
+        } else {
+            return "jump_count";
+        }
+    }
+    
     // Helper method to get completion count based on exercise type
     private int getCurrentCompletionCount() {
         if ("arm_circles".equals(exerciseType)) {
@@ -596,11 +616,11 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         // Add timeout to API call and detailed logging
         android.util.Log.d("MainActivity", "🔄 Starting API call to update database...");
         
-        apiService.updateUserStats(userId, getCurrentCompletionCount(), getCurrentXPReward(), (int) sessionDuration)
+        apiService.updateUserStats(userId, exerciseType, getCurrentCompletionCount(), getCurrentXPReward(), (int) sessionDuration)
             .thenAccept(updatedStats -> {
                 // Database update successful!
                 runOnUiThread(() -> {
-                    android.util.Log.d("MainActivity", "✅ DATABASE UPDATE SUCCESS! New stats - Level: " + updatedStats.level + ", XP: " + updatedStats.xp + ", Total Jumps: " + updatedStats.totalJumps);
+                    android.util.Log.d("MainActivity", "✅ DATABASE UPDATE SUCCESS! New stats - Level: " + updatedStats.level + ", XP: " + updatedStats.xp + ", Total All Exercises: " + updatedStats.totalAllExercises);
                     android.widget.Toast.makeText(this, "✅ Database updated successfully!", android.widget.Toast.LENGTH_SHORT).show();
                     
                     // Update local cache with fresh database data
@@ -608,6 +628,13 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                         .putInt("xp", updatedStats.xp)
                         .putInt("level", updatedStats.level)
                         .putInt("jump_count", updatedStats.totalJumps)
+                        .putInt("arm_circles_count", updatedStats.totalArmCircles)
+                        .putInt("high_knees_count", updatedStats.totalHighKnees)
+                        .putInt("side_reaches_count", updatedStats.totalSideReaches)
+                        .putInt("jack_jumps_count", updatedStats.totalJackJumps)
+                        .putInt("biceps_curls_count", updatedStats.totalBicepsCurls)
+                        .putInt("shoulder_presses_count", updatedStats.totalShoulderPresses)
+                        .putInt("squats_count", updatedStats.totalSquats)
                         .putInt("exercises_completed", updatedStats.exercisesCompleted)
                         .apply();
                     
@@ -624,15 +651,18 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
                     android.widget.Toast.makeText(this, "⚠️ Database update failed - check connection", android.widget.Toast.LENGTH_LONG).show();
                     
                     // Update local stats as fallback
-        int currentXp = userStats.getInt("xp", 0);
-                    int currentJumps = userStats.getInt("jump_count", 0);
-        int exercisesCompleted = userStats.getInt("exercises_completed", 0);
-        
-        userStats.edit()
-                                .putInt("xp", currentXp + getCurrentXPReward())
-                        .putInt("jump_count", currentJumps + getCurrentCompletionCount())
-            .putInt("exercises_completed", exercisesCompleted + 1)
-            .apply();
+                    int currentXp = userStats.getInt("xp", 0);
+                    int exercisesCompleted = userStats.getInt("exercises_completed", 0);
+                    
+                    // Update the specific exercise count based on exercise type
+                    String exerciseCountKey = getExerciseCountKey(exerciseType);
+                    int currentCount = userStats.getInt(exerciseCountKey, 0);
+                    
+                    userStats.edit()
+                        .putInt("xp", currentXp + getCurrentXPReward())
+                        .putInt(exerciseCountKey, currentCount + getCurrentCompletionCount())
+                        .putInt("exercises_completed", exercisesCompleted + 1)
+                        .apply();
         
                     showCongratulationsScreen();
                 });
@@ -1151,32 +1181,28 @@ public class MainActivity extends AppCompatActivity implements JumpCounter.JumpL
         super.onDestroy();
         isDestroyed = true;
         
-        // Shut down executors safely
+        // Clean up ONNX resources BEFORE shutting down executors
+        synchronized (sessionLock) {
+            try {
+                if (session != null) {
+                    session.close();
+                    session = null;
+                }
+                if (env != null) {
+                    env.close();
+                    env = null;
+                }
+            } catch (OrtException e) {
+                Log.e("PoseTracker", "Error closing ONNX resources", e);
+            }
+        }
+        
+        // Now shut down executors safely
         if (cameraExecutor != null) {
             cameraExecutor.shutdown();
         }
         if (inferenceExecutor != null) {
             inferenceExecutor.shutdown();
-        }
-        
-        // Clean up ONNX resources
-        if (inferenceExecutor != null) {
-            inferenceExecutor.execute(() -> {
-                synchronized (sessionLock) {
-                    try {
-                        if (session != null) {
-                            session.close();
-                            session = null;
-                        }
-                        if (env != null) {
-                            env.close();
-                            env = null;
-                        }
-        } catch (OrtException e) {
-                        Log.e("PoseTracker", "Error closing ONNX resources", e);
-                    }
-                }
-            });
         }
         
         // Clear references

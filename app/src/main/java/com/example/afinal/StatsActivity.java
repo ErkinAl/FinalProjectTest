@@ -18,6 +18,13 @@ public class StatsActivity extends AppCompatActivity {
 
     private TextView tvXpValue;
     private TextView tvJumpCountValue;
+    private TextView tvArmCirclesValue;
+    private TextView tvHighKneesValue;
+    private TextView tvSideReachesValue;
+    private TextView tvJackJumpsValue;
+    private TextView tvBicepsCurlsValue;
+    private TextView tvShoulderPressValue;
+    private TextView tvSquatsValue;
     private TextView tvExercisesCompletedValue;
     private TextView tvLevelValue;
     private ProgressBar pbNextLevel;
@@ -40,6 +47,13 @@ public class StatsActivity extends AppCompatActivity {
         // Initialize views
         tvXpValue = findViewById(R.id.tvXpValue);
         tvJumpCountValue = findViewById(R.id.tvJumpCountValue);
+        tvArmCirclesValue = findViewById(R.id.tvArmCirclesValue);
+        tvHighKneesValue = findViewById(R.id.tvHighKneesValue);
+        tvSideReachesValue = findViewById(R.id.tvSideReachesValue);
+        tvJackJumpsValue = findViewById(R.id.tvJackJumpsValue);
+        tvBicepsCurlsValue = findViewById(R.id.tvBicepsCurlsValue);
+        tvShoulderPressValue = findViewById(R.id.tvShoulderPressValue);
+        tvSquatsValue = findViewById(R.id.tvSquatsValue);
         tvExercisesCompletedValue = findViewById(R.id.tvExercisesCompletedValue);
         tvLevelValue = findViewById(R.id.tvLevelValue);
         pbNextLevel = findViewById(R.id.pbNextLevel);
@@ -88,8 +102,29 @@ public class StatsActivity extends AppCompatActivity {
         tvJumpCountValue.setAlpha(0f);
         tvJumpCountValue.animate().alpha(1f).setDuration(600).setStartDelay(700);
         
+        tvArmCirclesValue.setAlpha(0f);
+        tvArmCirclesValue.animate().alpha(1f).setDuration(600).setStartDelay(800);
+        
+        tvHighKneesValue.setAlpha(0f);
+        tvHighKneesValue.animate().alpha(1f).setDuration(600).setStartDelay(900);
+        
+        tvSideReachesValue.setAlpha(0f);
+        tvSideReachesValue.animate().alpha(1f).setDuration(600).setStartDelay(1000);
+        
+        tvJackJumpsValue.setAlpha(0f);
+        tvJackJumpsValue.animate().alpha(1f).setDuration(600).setStartDelay(1100);
+        
+        tvBicepsCurlsValue.setAlpha(0f);
+        tvBicepsCurlsValue.animate().alpha(1f).setDuration(600).setStartDelay(1200);
+        
+        tvShoulderPressValue.setAlpha(0f);
+        tvShoulderPressValue.animate().alpha(1f).setDuration(600).setStartDelay(1300);
+        
+        tvSquatsValue.setAlpha(0f);
+        tvSquatsValue.animate().alpha(1f).setDuration(600).setStartDelay(1400);
+        
         tvExercisesCompletedValue.setAlpha(0f);
-        tvExercisesCompletedValue.animate().alpha(1f).setDuration(600).setStartDelay(900);
+        tvExercisesCompletedValue.animate().alpha(1f).setDuration(600).setStartDelay(1500);
     }
     
     @Override
@@ -115,10 +150,10 @@ public class StatsActivity extends AppCompatActivity {
         apiService.getUserStats(userId)
             .thenAccept(stats -> {
                 runOnUiThread(() -> {
-                    android.util.Log.d("StatsActivity", "API Response - Level: " + stats.level + ", XP: " + stats.xp + ", Jumps: " + stats.totalJumps);
+                    android.util.Log.d("StatsActivity", "API Response - Level: " + stats.level + ", XP: " + stats.xp + ", Total All Exercises: " + stats.totalAllExercises);
         
-                    // Update UI with fresh database data
-                    updateStatsDisplay(stats.level, stats.xp, stats.totalJumps, stats.exercisesCompleted, stats.currentLevelXp);
+                    // Update UI with fresh database data - pass all exercise types
+                    updateStatsDisplay(stats);
         
                     // Update local storage with latest database data
                     SharedPreferences prefs = getSharedPreferences("user_stats", MODE_PRIVATE);
@@ -126,6 +161,13 @@ public class StatsActivity extends AppCompatActivity {
                         .putInt("xp", stats.xp)
                         .putInt("level", stats.level)
                         .putInt("jump_count", stats.totalJumps)
+                        .putInt("arm_circles_count", stats.totalArmCircles)
+                        .putInt("high_knees_count", stats.totalHighKnees)
+                        .putInt("side_reaches_count", stats.totalSideReaches)
+                        .putInt("jack_jumps_count", stats.totalJackJumps)
+                        .putInt("biceps_curls_count", stats.totalBicepsCurls)
+                        .putInt("shoulder_presses_count", stats.totalShoulderPresses)
+                        .putInt("squats_count", stats.totalSquats)
                         .putInt("exercises_completed", stats.exercisesCompleted)
                         .apply();
                     
@@ -151,13 +193,22 @@ public class StatsActivity extends AppCompatActivity {
                     
                     SharedPreferences prefs = getSharedPreferences("user_stats", MODE_PRIVATE);
                     
-                    int xp = prefs.getInt("xp", 0);
-                    int jumpCount = prefs.getInt("jump_count", 0);
-                    int exercisesCompleted = prefs.getInt("exercises_completed", 0);
-                    int level = prefs.getInt("level", 0);
-                    int progressToNextLevel = xp % 100;
+                    // Create a stats object from local storage
+                    ApiService.UserStats localStats = new ApiService.UserStats();
+                    localStats.xp = prefs.getInt("xp", 0);
+                    localStats.level = prefs.getInt("level", 0);
+                    localStats.totalJumps = prefs.getInt("jump_count", 0);
+                    localStats.totalArmCircles = prefs.getInt("arm_circles_count", 0);
+                    localStats.totalHighKnees = prefs.getInt("high_knees_count", 0);
+                    localStats.totalSideReaches = prefs.getInt("side_reaches_count", 0);
+                    localStats.totalJackJumps = prefs.getInt("jack_jumps_count", 0);
+                    localStats.totalBicepsCurls = prefs.getInt("biceps_curls_count", 0);
+                    localStats.totalShoulderPresses = prefs.getInt("shoulder_presses_count", 0);
+                    localStats.totalSquats = prefs.getInt("squats_count", 0);
+                    localStats.exercisesCompleted = prefs.getInt("exercises_completed", 0);
+                    localStats.currentLevelXp = localStats.xp % 100;
                     
-                    updateStatsDisplay(level, xp, jumpCount, exercisesCompleted, progressToNextLevel);
+                    updateStatsDisplay(localStats);
                     hideLoadingState();
                 });
                 return null;
@@ -175,6 +226,13 @@ public class StatsActivity extends AppCompatActivity {
         // Show loading indicators
         tvXpValue.setText("...");
         tvJumpCountValue.setText("...");
+        tvArmCirclesValue.setText("...");
+        tvHighKneesValue.setText("...");
+        tvSideReachesValue.setText("...");
+        tvJackJumpsValue.setText("...");
+        tvBicepsCurlsValue.setText("...");
+        tvShoulderPressValue.setText("...");
+        tvSquatsValue.setText("...");
         tvExercisesCompletedValue.setText("...");
         tvLevelValue.setText("...");
         tvNextLevelProgress.setText("Loading...");
@@ -184,15 +242,22 @@ public class StatsActivity extends AppCompatActivity {
         // Loading complete - UI already updated with real data
     }
     
-    private void updateStatsDisplay(int level, int xp, int jumpCount, int exercisesCompleted, int progressToNextLevel) {
-        tvXpValue.setText(String.valueOf(xp));
-        tvJumpCountValue.setText(String.valueOf(jumpCount));
-        tvExercisesCompletedValue.setText(String.valueOf(exercisesCompleted));
-        tvLevelValue.setText(String.valueOf(level));
+    private void updateStatsDisplay(ApiService.UserStats stats) {
+        tvXpValue.setText(String.valueOf(stats.xp));
+        tvJumpCountValue.setText(String.valueOf(stats.totalJumps));
+        tvArmCirclesValue.setText(String.valueOf(stats.totalArmCircles));
+        tvHighKneesValue.setText(String.valueOf(stats.totalHighKnees));
+        tvSideReachesValue.setText(String.valueOf(stats.totalSideReaches));
+        tvJackJumpsValue.setText(String.valueOf(stats.totalJackJumps));
+        tvBicepsCurlsValue.setText(String.valueOf(stats.totalBicepsCurls));
+        tvShoulderPressValue.setText(String.valueOf(stats.totalShoulderPresses));
+        tvSquatsValue.setText(String.valueOf(stats.totalSquats));
+        tvExercisesCompletedValue.setText(String.valueOf(stats.exercisesCompleted));
+        tvLevelValue.setText(String.valueOf(stats.level));
         
         // Set progress bar and text
-        pbNextLevel.setProgress(progressToNextLevel);
-        tvNextLevelProgress.setText(progressToNextLevel + "/100");
+        pbNextLevel.setProgress(stats.currentLevelXp);
+        tvNextLevelProgress.setText(stats.currentLevelXp + "/100");
         }
     
 

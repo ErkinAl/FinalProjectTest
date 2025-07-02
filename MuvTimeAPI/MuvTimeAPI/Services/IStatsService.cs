@@ -5,7 +5,7 @@ namespace MuvTimeAPI.Services;
 public interface IStatsService
 {
     Task<StatsDto> GetUserStatsAsync(string userId);
-    Task<StatsDto> UpdateUserStatsAsync(string userId, int jumpsCompleted, int xpEarned, int sessionDuration);
+    Task<StatsDto> UpdateUserStatsAsync(string userId, string exerciseType, int repsCompleted, int xpEarned, int sessionDuration);
     Task<List<ExerciseSessionDto>> GetUserSessionsAsync(string userId);
     Task<StatsDto> ResetUserStatsAsync(string userId);
     Task<StatsDto> InitializeUserStatsAsync(string userId, string displayName, string email);

@@ -34,7 +34,7 @@ public class StatsController : ControllerBase
     {
         try
         {
-            var stats = await _statsService.UpdateUserStatsAsync(userId, request.JumpsCompleted, request.XpEarned, request.SessionDuration);
+            var stats = await _statsService.UpdateUserStatsAsync(userId, request.ExerciseType, request.RepsCompleted, request.XpEarned, request.SessionDuration);
             return Ok(stats);
         }
         catch (Exception ex)
@@ -88,7 +88,8 @@ public class StatsController : ControllerBase
 
 public class UpdateStatsRequest
 {
-    public int JumpsCompleted { get; set; }
+    public string ExerciseType { get; set; } = "jump";
+    public int RepsCompleted { get; set; }
     public int XpEarned { get; set; }
     public int SessionDuration { get; set; }
 }

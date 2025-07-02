@@ -56,8 +56,32 @@ public class ApiService {
         @SerializedName("totalJumps")
         public int totalJumps;
         
+        @SerializedName("totalArmCircles")
+        public int totalArmCircles;
+        
+        @SerializedName("totalHighKnees")
+        public int totalHighKnees;
+        
+        @SerializedName("totalSideReaches")
+        public int totalSideReaches;
+        
+        @SerializedName("totalJackJumps")
+        public int totalJackJumps;
+        
+        @SerializedName("totalBicepsCurls")
+        public int totalBicepsCurls;
+        
+        @SerializedName("totalShoulderPresses")
+        public int totalShoulderPresses;
+        
+        @SerializedName("totalSquats")
+        public int totalSquats;
+        
         @SerializedName("exercisesCompleted")
         public int exercisesCompleted;
+        
+        @SerializedName("totalAllExercises")
+        public int totalAllExercises;
         
         @SerializedName("xpToNextLevel")
         public int xpToNextLevel;
@@ -67,8 +91,11 @@ public class ApiService {
     }
     
     public static class UpdateStatsRequest {
-        @SerializedName("jumpsCompleted")
-        public int jumpsCompleted;
+        @SerializedName("exerciseType")
+        public String exerciseType;
+        
+        @SerializedName("repsCompleted")
+        public int repsCompleted;
         
         @SerializedName("xpEarned")
         public int xpEarned;
@@ -76,8 +103,9 @@ public class ApiService {
         @SerializedName("sessionDuration")
         public int sessionDuration;
         
-        public UpdateStatsRequest(int jumpsCompleted, int xpEarned, int sessionDuration) {
-            this.jumpsCompleted = jumpsCompleted;
+        public UpdateStatsRequest(String exerciseType, int repsCompleted, int xpEarned, int sessionDuration) {
+            this.exerciseType = exerciseType;
+            this.repsCompleted = repsCompleted;
             this.xpEarned = xpEarned;
             this.sessionDuration = sessionDuration;
         }
@@ -90,8 +118,8 @@ public class ApiService {
         @SerializedName("exerciseType")
         public String exerciseType;
         
-        @SerializedName("jumpsCompleted")
-        public int jumpsCompleted;
+        @SerializedName("repsCompleted")
+        public int repsCompleted;
         
         @SerializedName("xpEarned")
         public int xpEarned;
@@ -135,10 +163,10 @@ public class ApiService {
     }
     
     // Update user statistics after exercise
-    public CompletableFuture<UserStats> updateUserStats(String userId, int jumpsCompleted, int xpEarned, int sessionDuration) {
+    public CompletableFuture<UserStats> updateUserStats(String userId, String exerciseType, int repsCompleted, int xpEarned, int sessionDuration) {
         CompletableFuture<UserStats> future = new CompletableFuture<>();
         
-        UpdateStatsRequest requestBody = new UpdateStatsRequest(jumpsCompleted, xpEarned, sessionDuration);
+        UpdateStatsRequest requestBody = new UpdateStatsRequest(exerciseType, repsCompleted, xpEarned, sessionDuration);
         String json = gson.toJson(requestBody);
         
         RequestBody body = RequestBody.create(json, MediaType.get("application/json; charset=utf-8"));

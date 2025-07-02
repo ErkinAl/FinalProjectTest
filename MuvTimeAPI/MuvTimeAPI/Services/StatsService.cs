@@ -24,18 +24,58 @@ public class StatsService : IStatsService
             Level = userStats.Level,
             Xp = userStats.Xp,
             TotalJumps = userStats.TotalJumps,
+            TotalArmCircles = userStats.TotalArmCircles,
+            TotalHighKnees = userStats.TotalHighKnees,
+            TotalSideReaches = userStats.TotalSideReaches,
+            TotalJackJumps = userStats.TotalJackJumps,
+            TotalBicepsCurls = userStats.TotalBicepsCurls,
+            TotalShoulderPresses = userStats.TotalShoulderPresses,
+            TotalSquats = userStats.TotalSquats,
             ExercisesCompleted = userStats.ExercisesCompleted,
+            TotalAllExercises = userStats.TotalJumps + userStats.TotalArmCircles + userStats.TotalHighKnees + 
+                               userStats.TotalSideReaches + userStats.TotalJackJumps + userStats.TotalBicepsCurls + 
+                               userStats.TotalShoulderPresses + userStats.TotalSquats,
             XpToNextLevel = CalculateXpToNextLevel(userStats.Xp),
             CurrentLevelXp = CalculateCurrentLevelXp(userStats.Xp)
         };
     }
 
-    public async Task<StatsDto> UpdateUserStatsAsync(string userId, int jumpsCompleted, int xpEarned, int sessionDuration)
+    public async Task<StatsDto> UpdateUserStatsAsync(string userId, string exerciseType, int repsCompleted, int xpEarned, int sessionDuration)
     {
         var userStats = await GetOrCreateUserStatsAsync(userId);
         
-        // Update stats
-        userStats.TotalJumps += jumpsCompleted;
+        // Update stats based on exercise type
+        switch (exerciseType.ToLower())
+        {
+            case "jump":
+                userStats.TotalJumps += repsCompleted;
+                break;
+            case "arm_circles":
+                userStats.TotalArmCircles += repsCompleted;
+                break;
+            case "high_knees":
+                userStats.TotalHighKnees += repsCompleted;
+                break;
+            case "side_reach":
+                userStats.TotalSideReaches += repsCompleted;
+                break;
+            case "jack_jumps":
+                userStats.TotalJackJumps += repsCompleted;
+                break;
+            case "biceps_curl":
+                userStats.TotalBicepsCurls += repsCompleted;
+                break;
+            case "shoulder_press":
+                userStats.TotalShoulderPresses += repsCompleted;
+                break;
+            case "squat":
+                userStats.TotalSquats += repsCompleted;
+                break;
+            default:
+                userStats.TotalJumps += repsCompleted; // Default to jumps
+                break;
+        }
+        
         userStats.ExercisesCompleted += 1;
         userStats.Xp += xpEarned;
         userStats.Level = CalculateLevel(userStats.Xp);
@@ -50,8 +90,8 @@ public class StatsService : IStatsService
         {
             Id = Guid.NewGuid().ToString(),
             UserId = userId,
-            ExerciseType = "jump_counter",
-            JumpsCompleted = jumpsCompleted,
+            ExerciseType = exerciseType,
+            RepsCompleted = repsCompleted,
             XpEarned = xpEarned,
             SessionDuration = sessionDuration,
             CompletedAt = DateTime.UtcNow
@@ -65,7 +105,17 @@ public class StatsService : IStatsService
             Level = userStats.Level,
             Xp = userStats.Xp,
             TotalJumps = userStats.TotalJumps,
+            TotalArmCircles = userStats.TotalArmCircles,
+            TotalHighKnees = userStats.TotalHighKnees,
+            TotalSideReaches = userStats.TotalSideReaches,
+            TotalJackJumps = userStats.TotalJackJumps,
+            TotalBicepsCurls = userStats.TotalBicepsCurls,
+            TotalShoulderPresses = userStats.TotalShoulderPresses,
+            TotalSquats = userStats.TotalSquats,
             ExercisesCompleted = userStats.ExercisesCompleted,
+            TotalAllExercises = userStats.TotalJumps + userStats.TotalArmCircles + userStats.TotalHighKnees + 
+                               userStats.TotalSideReaches + userStats.TotalJackJumps + userStats.TotalBicepsCurls + 
+                               userStats.TotalShoulderPresses + userStats.TotalSquats,
             XpToNextLevel = CalculateXpToNextLevel(userStats.Xp),
             CurrentLevelXp = CalculateCurrentLevelXp(userStats.Xp)
         };
@@ -83,7 +133,7 @@ public class StatsService : IStatsService
         {
             Id = s.Id,
             ExerciseType = s.ExerciseType,
-            JumpsCompleted = s.JumpsCompleted,
+            RepsCompleted = s.RepsCompleted,
             XpEarned = s.XpEarned,
             SessionDuration = s.SessionDuration,
             CompletedAt = s.CompletedAt
@@ -97,6 +147,13 @@ public class StatsService : IStatsService
         userStats.Xp = 0;
         userStats.Level = 0;
         userStats.TotalJumps = 0;
+        userStats.TotalArmCircles = 0;
+        userStats.TotalHighKnees = 0;
+        userStats.TotalSideReaches = 0;
+        userStats.TotalJackJumps = 0;
+        userStats.TotalBicepsCurls = 0;
+        userStats.TotalShoulderPresses = 0;
+        userStats.TotalSquats = 0;
         userStats.ExercisesCompleted = 0;
         userStats.UpdatedAt = DateTime.UtcNow;
 
@@ -108,7 +165,17 @@ public class StatsService : IStatsService
             Level = userStats.Level,
             Xp = userStats.Xp,
             TotalJumps = userStats.TotalJumps,
+            TotalArmCircles = userStats.TotalArmCircles,
+            TotalHighKnees = userStats.TotalHighKnees,
+            TotalSideReaches = userStats.TotalSideReaches,
+            TotalJackJumps = userStats.TotalJackJumps,
+            TotalBicepsCurls = userStats.TotalBicepsCurls,
+            TotalShoulderPresses = userStats.TotalShoulderPresses,
+            TotalSquats = userStats.TotalSquats,
             ExercisesCompleted = userStats.ExercisesCompleted,
+            TotalAllExercises = userStats.TotalJumps + userStats.TotalArmCircles + userStats.TotalHighKnees + 
+                               userStats.TotalSideReaches + userStats.TotalJackJumps + userStats.TotalBicepsCurls + 
+                               userStats.TotalShoulderPresses + userStats.TotalSquats,
             XpToNextLevel = CalculateXpToNextLevel(userStats.Xp),
             CurrentLevelXp = CalculateCurrentLevelXp(userStats.Xp)
         };
@@ -144,7 +211,17 @@ public class StatsService : IStatsService
             Level = userStats.Level,
             Xp = userStats.Xp,
             TotalJumps = userStats.TotalJumps,
+            TotalArmCircles = userStats.TotalArmCircles,
+            TotalHighKnees = userStats.TotalHighKnees,
+            TotalSideReaches = userStats.TotalSideReaches,
+            TotalJackJumps = userStats.TotalJackJumps,
+            TotalBicepsCurls = userStats.TotalBicepsCurls,
+            TotalShoulderPresses = userStats.TotalShoulderPresses,
+            TotalSquats = userStats.TotalSquats,
             ExercisesCompleted = userStats.ExercisesCompleted,
+            TotalAllExercises = userStats.TotalJumps + userStats.TotalArmCircles + userStats.TotalHighKnees + 
+                               userStats.TotalSideReaches + userStats.TotalJackJumps + userStats.TotalBicepsCurls + 
+                               userStats.TotalShoulderPresses + userStats.TotalSquats,
             XpToNextLevel = CalculateXpToNextLevel(userStats.Xp),
             CurrentLevelXp = CalculateCurrentLevelXp(userStats.Xp)
         };
@@ -169,6 +246,13 @@ public class StatsService : IStatsService
             Xp = 0,
             Level = 0,
             TotalJumps = 0,
+            TotalArmCircles = 0,
+            TotalHighKnees = 0,
+            TotalSideReaches = 0,
+            TotalJackJumps = 0,
+            TotalBicepsCurls = 0,
+            TotalShoulderPresses = 0,
+            TotalSquats = 0,
             ExercisesCompleted = 0,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
