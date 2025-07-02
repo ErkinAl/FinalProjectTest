@@ -325,7 +325,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email [your-email] or create an issue in this repository.
+For support, email [erkin2002@gmail.com] or create an issue in this repository.
 
 ---
 

@@ -110,7 +110,7 @@ public class ApiService {
             this.sessionDuration = sessionDuration;
         }
     }
-    
+    /***
     public static class ExerciseSession {
         @SerializedName("id")
         public String id;
@@ -130,7 +130,7 @@ public class ApiService {
         @SerializedName("completedAt")
         public String completedAt;
     }
-    
+    ***/
     // Get user statistics
     public CompletableFuture<UserStats> getUserStats(String userId) {
         CompletableFuture<UserStats> future = new CompletableFuture<>();
@@ -202,7 +202,7 @@ public class ApiService {
     public static String getUserId(Context context) {
         String userId = AuthActivity.getCurrentUserId(context);
         if (userId == null || userId.isEmpty()) { // for test
-            // Fallback for testing - in production, this should never happen
+            // Fallback for testing - in production, it should never enter here
             return "550e8400-e29b-41d4-a716-446655440000";
         }
         return userId;
