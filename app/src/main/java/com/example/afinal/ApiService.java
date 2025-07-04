@@ -22,11 +22,10 @@ public class ApiService {
     private static final String BASE_URL = getApiBaseUrl();
     
     private static String getApiBaseUrl() {
-        // Use Azure-deployed API for production
-        // Replace with your actual Azure URL after deployment
+        //  Azure API
         return "https://muvtime-api-erkinalkan-fmctdaeygrasavfd.polandcentral-01.azurewebsites.net/api";
         
-        // Uncomment below for local development
+        // this is for local development >>> dont need anymore
         /*
         String fingerprint = android.os.Build.FINGERPRINT;
         if (fingerprint.contains("generic") || fingerprint.contains("emulator")) {
@@ -202,7 +201,7 @@ public class ApiService {
     public static String getUserId(Context context) {
         String userId = AuthActivity.getCurrentUserId(context);
         if (userId == null || userId.isEmpty()) { // for test
-            // Fallback for testing - in production, it should never enter here
+            // Fallback for testing - it should never enter here anymore
             return "550e8400-e29b-41d4-a716-446655440000";
         }
         return userId;

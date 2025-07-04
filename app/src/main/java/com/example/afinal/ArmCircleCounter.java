@@ -14,19 +14,19 @@ public class ArmCircleCounter {
         void onArmCircleDetected(int armCircleCount);
     }
     
-    // Arm circle detection constants - optimized for small, controlled circles
-    private static final float MOVEMENT_THRESHOLD = 0.008f; // Smaller threshold for small circles
-    private static final float MIN_CONFIDENCE = 0.25f; // Slightly lower confidence for better detection
-    private static final long CIRCLE_COOLDOWN_MS = 1000; // Proper cooldown to prevent false counting
-    private static final float MIN_CIRCLE_RADIUS = 0.03f; // Smaller minimum radius for small circles
-    private static final int CIRCLE_VALIDATION_POINTS = 4; // Very few points needed for tiny circles
-    private static final float ARM_EXTENSION_THRESHOLD = 0.05f; // Even lower threshold for arm extension
+    // Arm circle detection constants
+    //private static final float MOVEMENT_THRESHOLD = 0.008f; // Smaller threshold for small circles
+    private static final float MIN_CONFIDENCE = 0.25f; // Slightly lowered
+    private static final long CIRCLE_COOLDOWN_MS = 1000; // Cooldown time
+    //private static final float MIN_CIRCLE_RADIUS = 0.03f; // Maybe smaller? minimum radius for small circles
+    //private static final int CIRCLE_VALIDATION_POINTS = 4; // Very few points needed for tiny circles
+    private static final float ARM_EXTENSION_THRESHOLD = 0.05f; // Even lower threshold for arm extension???
     
     // Human-realistic validation constants - adjusted for natural movement
-    private static final float HORIZONTAL_ARM_TOLERANCE = 0.35f; // Much more tolerance (wrists can be below shoulders)
-    private static final float MAX_VERTICAL_DEVIATION = 0.5f; // Allow more Y movement during circles
-    private static final int MIN_FRAMES_FOR_CIRCLE = 4; // Even fewer frames needed
-    private static final float BOTH_ARMS_REQUIREMENT = 0.3f; // Very lenient requirement
+    private static final float HORIZONTAL_ARM_TOLERANCE = 0.35f; // Much more toleranced
+    //private static final float MAX_VERTICAL_DEVIATION = 0.5f; // Allow more Y movement
+    //private static final int MIN_FRAMES_FOR_CIRCLE = 4; // Even fewer frames needed
+    //private static final float BOTH_ARMS_REQUIREMENT = 0.3f;
     
     private static final String TAG = "ArmCircleCounter";
     
@@ -35,12 +35,12 @@ public class ArmCircleCounter {
     private boolean hasValidPrevFrame = false;
     private long lastCircleTime = 0;
     
-    // 10-POINT FLEXIBILITY: Track recent completions for "near simultaneous" detection
+    // 10-POINT FLEXIBILITY: ///>>>>>>Track recent completions for "near simultaneous" detection
     private long leftArmLastCompletion = 0;
     private long rightArmLastCompletion = 0;
     private static final long SIMULTANEOUS_WINDOW_MS = 400; // 400ms window for "simultaneous" completion
     
-    // Circle detection for left and right arms - tracking arm position relative to shoulder
+    // Circle detection for left and right arms >>>>>>>>tracking arm position relative to shoulder
     private ArmCircleTracker leftArmTracker = new ArmCircleTracker();
     private ArmCircleTracker rightArmTracker = new ArmCircleTracker();
     
@@ -53,20 +53,21 @@ public class ArmCircleCounter {
     }
     
     /**
-     * Validate if arms are in proper position for arm circles using shoulder-elbow-wrist in 2D
+     * Validate if arms are in proper position for arm circles using shoulder,elbow,wrist
      * Arms should be extended horizontally with all three joints aligned
+     *>>>>>>>>>>>>>>>>>> DONT FORGET THESE!!!<<<
      */
     private boolean isValidArmCirclePosition(float[] leftShoulder, float[] rightShoulder, 
                                            float[] leftElbow, float[] rightElbow,
                                            float[] leftWrist, float[] rightWrist) {
         
-        // Check if we have confidence in ALL required keypoints (shoulder, elbow, wrist)
+        // >>Check<<< if we have confidence in ALL required keypoints (shoulder, elbow, wrist)
         boolean allPointsValid = leftShoulder[2] > MIN_CONFIDENCE && rightShoulder[2] > MIN_CONFIDENCE &&
                                leftElbow[2] > MIN_CONFIDENCE && rightElbow[2] > MIN_CONFIDENCE &&
                                leftWrist[2] > MIN_CONFIDENCE && rightWrist[2] > MIN_CONFIDENCE;
         
         if (!allPointsValid) {
-            Log.d(TAG, "❌ Not all arm keypoints visible (shoulder-elbow-wrist)");
+            Log.d(TAG, "❌❌❌❌❌❌ Not all arm keypoints visible (shoulder-elbow-wrist)");
             return false;
         }
         
@@ -76,7 +77,7 @@ public class ArmCircleCounter {
         float rightArmStraightness = calculateArmStraightness(rightShoulder, rightElbow, rightWrist);
         
         if (leftArmStraightness < 0.7f || rightArmStraightness < 0.7f) {
-            Log.d(TAG, "❌ Arms not extended straight - Left: " + leftArmStraightness + ", Right: " + rightArmStraightness);
+            Log.d(TAG, "❌❌❌❌❌❌ Arms not extended straight - Left: " + leftArmStraightness + ", Right: " + rightArmStraightness);
             return false;
         }
         
@@ -85,7 +86,7 @@ public class ArmCircleCounter {
         float rightArmLength = calculateDistance(rightShoulder, rightWrist);
         
         if (leftArmLength < ARM_EXTENSION_THRESHOLD * 1.5f || rightArmLength < ARM_EXTENSION_THRESHOLD * 1.5f) {
-            Log.d(TAG, "❌ Arms not extended enough - Left: " + leftArmLength + ", Right: " + rightArmLength);
+            Log.d(TAG, "❌❌❌❌❌❌ Arms not extended enough - Left: " + leftArmLength + ", Right: " + rightArmLength);
             return false;
         }
         
@@ -94,24 +95,25 @@ public class ArmCircleCounter {
         float rightVerticalDiff = Math.abs(rightWrist[1] - rightShoulder[1]);
         
         if (leftVerticalDiff > HORIZONTAL_ARM_TOLERANCE || rightVerticalDiff > HORIZONTAL_ARM_TOLERANCE) {
-            Log.d(TAG, "❌ Arms not horizontal - Left diff: " + leftVerticalDiff + ", Right diff: " + rightVerticalDiff);
+            Log.d(TAG, "❌❌❌❌❌❌❌ Arms not horizontal - Left diff: " + leftVerticalDiff + ", Right diff: " + rightVerticalDiff);
             return false;
         }
         
         // Check if both arms are at roughly same height (prevent one arm raised)
         float armHeightDiff = Math.abs(leftWrist[1] - rightWrist[1]);
         if (armHeightDiff > HORIZONTAL_ARM_TOLERANCE) {
-            Log.d(TAG, "❌ Arms not at same height - Difference: " + armHeightDiff);
+            Log.d(TAG, "❌❌❌❌❌❌❌ Arms not at same height - Difference: " + armHeightDiff);
             return false;
         }
         
-        Log.d(TAG, "✅ Perfect arm circle position - both arms extended horizontally");
+        Log.d(TAG, "✅✅✅✅✅✅✅ Perfect arm circle position - both arms extended horizontally");
         return true;
     }
     
     /**
      * Calculate how straight the arm is (shoulder->elbow->wrist alignment)
      * Returns value 0.0 to 1.0 where 1.0 is perfectly straight
+     * MAYBE LOWERRR THIS????
      */
     private float calculateArmStraightness(float[] shoulder, float[] elbow, float[] wrist) {
         float shoulderElbowDist = calculateDistance(shoulder, elbow);
@@ -136,6 +138,7 @@ public class ArmCircleCounter {
     /**
      * Process keypoints to detect arm circle movements
      * Tracks the rotation of arms around shoulder joints
+     * >>>>>>>WORKING DO NOT TOUCH AGAIN<<<
      */
     public void processKeypoints(java.util.List<float[]> keypoints) {
         if (keypoints == null || keypoints.size() < 17) {
@@ -152,12 +155,12 @@ public class ArmCircleCounter {
         float[] leftWrist = keypoints.get(9);      // Left wrist (end of arm)
         float[] rightWrist = keypoints.get(10);    // Right wrist (end of arm)
         
-        // ULTRA STRICT VALIDATION: Both arms must be in perfect arm circle position using all joints
+        //  STRICT VALIDATION: Both arms must be in arm circle position using all joints
         if (!isValidArmCirclePosition(leftShoulder, rightShoulder, leftElbow, rightElbow, leftWrist, rightWrist)) {
-            // Reset trackers if position is invalid to prevent false positives
+            // >>>Reset trackers if position is invalid to prevent false positives
             leftArmTracker.reset();
             rightArmTracker.reset();
-            Log.d(TAG, "❌ Arms not in proper arm circle position - resetting");
+            Log.d(TAG, "❌❌❌❌ Arms not in proper arm circle position - resetting");
             return;
         }
         
@@ -166,13 +169,14 @@ public class ArmCircleCounter {
         boolean rightArmValid = rightShoulder[2] > MIN_CONFIDENCE && rightElbow[2] > MIN_CONFIDENCE && rightWrist[2] > MIN_CONFIDENCE;
         
         if (!leftArmValid || !rightArmValid) {
-            Log.d(TAG, "❌ All arm joints must be visible (shoulder-elbow-wrist)");
+            Log.d(TAG, "❌❌❌❌ All arm joints must be visible (shoulder-elbow-wrist)");
             leftArmTracker.reset();
             rightArmTracker.reset();
             return;
         }
         
         // Skip first frame - need to establish baseline
+        // SOLVED!!!
         if (!hasValidPrevFrame) {
             hasValidPrevFrame = true;
             if (leftArmValid) {
@@ -203,7 +207,7 @@ public class ArmCircleCounter {
             Log.d(TAG, "✅ RIGHT ARM COMPLETED CIRCLE at " + currentTime);
         }
         
-        // FLEXIBLE SIMULTANEOUS DETECTION: Count if both arms completed within time window
+        // FLEXIBLE SIMULTANEOUS DETECTION: <>>>>>>>>>Count if both arms completed within time window
         long timeDiff = Math.abs(leftArmLastCompletion - rightArmLastCompletion);
         boolean bothRecentlyCompleted = (leftArmLastCompletion > 0 && rightArmLastCompletion > 0) && 
                                        (timeDiff <= SIMULTANEOUS_WINDOW_MS);
@@ -213,15 +217,15 @@ public class ArmCircleCounter {
         
         if (circleDetected) {
             Log.d(TAG, "🎯 BOTH ARMS COMPLETED WITHIN " + timeDiff + "ms - COUNTING AS VALID REP!");
-            // Reset completion times to prevent double counting
+            // Reset >>>>> prevent double counting
             leftArmLastCompletion = 0;
             rightArmLastCompletion = 0;
         } else if (leftCircleCompleted || rightCircleCompleted) {
             Log.d(TAG, "⏳ One arm completed - waiting for other arm within " + SIMULTANEOUS_WINDOW_MS + "ms window");
-            // Don't reset immediately - give other arm a chance to complete
+            // Don't reset immediately!!>>>>>>> give other arm a chance to complete
         }
         
-        // TIMEOUT CLEANUP: Clear old completion times if they're too old
+        // TIMEOUT CLEANUP: Clear old completion times if they're too PASSED
         if (leftArmLastCompletion > 0 && (currentTime - leftArmLastCompletion) > SIMULTANEOUS_WINDOW_MS) {
             Log.d(TAG, "⏰ Left arm completion timed out - clearing");
             leftArmLastCompletion = 0;
