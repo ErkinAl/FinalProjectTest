@@ -1,3 +1,5 @@
+MUVTIME APK PRE-BETA LINK >>>>> https://drive.google.com/file/d/1MC1O5yvOdsYP28Lx5031tLW3tXRcq5ll/view?usp=sharing
+ANDROID APK IS RELEASED IN THE LINK, GITHUB DOESNT ALLOW LARGE FILES.
 # MuvTime - AI-Powered Fitness App
 
 MuvTime is a comprehensive fitness application that combines AI-powered pose detection with gamified exercise tracking. Users can perform various exercises while the app uses computer vision to count repetitions, track progress, and award experience points.
